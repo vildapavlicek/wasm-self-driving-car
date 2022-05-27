@@ -54,6 +54,7 @@ pub struct Road {
     top: f64,
     bottom: f64,
     borders: Vec<Border>,
+    dash_line: Array,
 }
 
 #[wasm_bindgen]
@@ -69,6 +70,12 @@ impl Road {
         let right_border = Border::new(right, top, right, bottom);
 
         let borders = vec![left_border, right_border];
+        let dash_line = Array::new();
+        // dash_line.fill(&JsValue::from(20), 0, 2);
+        dash_line.push(&JsValue::from(20));
+        dash_line.push(&JsValue::from(20));
+
+        crate::log!("{:?}", dash_line);
 
         Self {
             x,
@@ -79,6 +86,7 @@ impl Road {
             top,
             bottom,
             borders,
+            dash_line,
         }
     }
 
@@ -118,62 +126,29 @@ impl Road {
         let lane_width = self.width / self.lane_count as f64;
         self.left + lane_width / 2. + (lane_index.min(self.lane_count - 1) as f64) * lane_width
     }
-}
 
-/*
-class Road {
-    constructor(x, width, laneCount = 3) {
-        this.x = x;
-        this.width = width;
-        this.laneCount = laneCount;
+    pub fn draw(&self, ctx: web_sys::CanvasRenderingContext2d) {
+        ctx.set_line_width(5.);
+        ctx.set_stroke_style(&JsValue::from_str("white"));
 
-        this.left = x - width / 2;
-        this.right = x + width / 2;
-        const infinity = 10000;
+        for i in 1..self.lane_count {
+            let inner_x =
+                crate::utils::lerp(self.left, self.right, i as f64 / self.lane_count as f64);
+            let _ = ctx.set_line_dash(self.dash_line.as_ref());
 
-        this.top = -infinity;
-        this.bottom = infinity;
-
-        const topLeft = {x: this.left, y: this.top };
-        const bottomLeft = {x: this.left, y: this.bottom };
-        const topRight = {x: this.right, y: this.top };
-        const bottomRight = {x: this.right, y: this.bottom };
-
-        this.borders = [
-            [topLeft, bottomLeft],
-            [topRight, bottomRight]
-        ];
-    }
-
-    getLaneCenter(laneIndex) {
-        const laneWidth = this.width / this.laneCount;
-        return this.left + laneWidth / 2 +
-            Math.min(laneIndex, this.laneCount - 1) * laneWidth;
-    }
-
-    draw(ctx) {
-        ctx.lineWidth = 5;
-        ctx.strokeStyle = "white";
-
-        for (let i = 1; i <= this.laneCount - 1; i++) {
-            const x = lerp(this.left, this.right, i / this.laneCount);
-
-            ctx.setLineDash([20, 20]);
-
-            ctx.beginPath();
-            ctx.moveTo(x, this.top);
-            ctx.lineTo(x, this.bottom);
+            ctx.begin_path();
+            ctx.move_to(inner_x, self.top);
+            ctx.line_to(inner_x, self.bottom);
             ctx.stroke();
         }
 
-        ctx.setLineDash([]);
-        this.borders.forEach(border => {
-            ctx.beginPath();
-            ctx.moveTo(border[0].x, border[0].y);
-            ctx.lineTo(border[1].x, border[1].y);
+        let _ = ctx.set_line_dash(Array::new().as_ref());
+
+        self.borders.iter().for_each(|b| {
+            ctx.begin_path();
+            ctx.move_to(b.top_x(), b.top_y());
+            ctx.line_to(b.bottom_x(), b.bottom_y());
             ctx.stroke();
-        })
+        });
     }
 }
-
-*/

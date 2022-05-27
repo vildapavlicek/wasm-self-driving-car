@@ -1,4 +1,4 @@
-import {Car, Road, lerp} from "wasm-self-driving-car";
+/* import {Car, Road, lerp, Sensor} from "wasm-self-driving-car";
 
 export function draw_car(ctx, car) {
     ctx.save();
@@ -17,7 +17,7 @@ ctx.lineWidth = 5;
 
     for (let i = 1; i <= road.lane_count() - 1; i++) {
         const x = lerp(road.left(), road.right(), i / road.lane_count());
-
+        console.log(x);
         ctx.setLineDash([20, 20]);
 
         ctx.beginPath();
@@ -33,4 +33,16 @@ ctx.lineWidth = 5;
         ctx.lineTo(border.bottom_x(), border.bottom_y());
         ctx.stroke();
      })
-}
+} */
+
+/* export function draw_sensor_rays(ctx, sensor, x, y) {
+    for (let i = 0; i < sensor.rays_count(); i++) {
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "yellow";
+
+        let ray = sensor.ray(i);
+
+        ctx.moveTo(ray.x(), ray.y());
+    }
+} */

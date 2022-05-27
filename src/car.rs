@@ -1,5 +1,10 @@
-use crate::controls::{Controls, KeyEvent};
+use crate::{
+    controls::{Controls, KeyEvent},
+    sensors::Sensor,
+};
+use std::ops::Neg;
 use wasm_bindgen::prelude::*;
+use web_sys::CanvasRenderingContext2d;
 
 const ANGLE_TURN: f64 = 0.03;
 const FRICTION: f64 = 0.05;
@@ -16,6 +21,7 @@ pub struct Car {
     speed: f64,
     angle: f64, // = 0;
     controls: Controls,
+    sensor: Sensor,
 }
 
 #[wasm_bindgen]
@@ -29,6 +35,7 @@ impl Car {
             speed: 0.0,
             angle: 0.0,
             controls: Controls::default(),
+            sensor: Sensor::new(3, 100., std::f64::consts::PI / 4.),
         }
     }
 
@@ -55,13 +62,6 @@ impl Car {
     pub fn handle_key_input(&self, event: KeyEvent) {
         self.controls.handle_key_input(event);
     }
-    /*
-    pub fn accelerate(&mut self) {
-        self.speed += ACCELERATION;
-        if self.speed > MAX_SPEED {
-            self.speed = MAX_SPEED;
-        }
-    } */
 
     pub fn decelerate(&mut self) {
         self.speed -= 2.;
@@ -76,8 +76,25 @@ impl Car {
     }
 
     pub fn update(&mut self) {
-        use std::ops::Neg;
+        self.move_car();
+        self.sensor.update(self.x, self.y, self.angle);
+    }
 
+    pub fn draw(&self, ctx: &CanvasRenderingContext2d) {
+        ctx.save();
+        let _ = ctx.translate(self.x, self.y);
+        let _ = ctx.rotate(self.angle.neg());
+
+        ctx.begin_path();
+        ctx.fill_rect(-self.width / 2., -self.height / 2., self.width, self.height);
+        ctx.restore();
+
+        self.sensor.draw(ctx);
+    }
+}
+
+impl Car {
+    fn move_car(&mut self) {
         if self.controls.up() {
             self.speed += ACCELERATION;
         }
