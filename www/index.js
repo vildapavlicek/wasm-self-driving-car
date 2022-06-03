@@ -1,7 +1,6 @@
 import * as wasm from "hello-wasm-pack";
  // import * as self_driving_car from "wasm-self-driving-car";
  import { Car, KeyEvent, Road, Border, lerp, get_canvas, use_canvas } from "wasm-self-driving-car";
- import { draw_car, draw_road } from "./helpers";
 
  // initialize canvas
  const canvas = document.getElementById("myCanvas");
@@ -10,37 +9,22 @@ import * as wasm from "hello-wasm-pack";
 
 
 // init road
-// const road = new Road(canvas.width / 2, canvas.width * 0.9);
 const road = Road.new(canvas.width / 2, canvas.width * 0.9, 3);
 // get our car
 const car = Car.new(road.lane_center(1), 100, 30, 50);
-/* 
-const my_canvas = get_canvas();
-use_canvas(ctx); */
-
 
 addKeyboardListeners();
 animate();
 
-
-
-
-
-
-
-
-
- function animate() {
-    car.update();
+function animate() {
+    car.update(road);
 
     canvas.height = window.innerHeight;
 
     ctx.save();
     ctx.translate(0, -car.y() + canvas.height * 0.7);
     road.draw(ctx);
-    // draw_road(ctx, road);
-    //draw_car(ctx, car);
-    car.draw(ctx);
+    car.draw(ctx, road);
     ctx.restore();
 
     requestAnimationFrame(animate);

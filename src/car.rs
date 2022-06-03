@@ -1,5 +1,6 @@
 use crate::{
     controls::{Controls, KeyEvent},
+    road::Road,
     sensors::Sensor,
 };
 use std::ops::Neg;
@@ -75,12 +76,13 @@ impl Car {
         self.angle -= ANGLE_TURN;
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, road: &Road) {
         self.move_car();
-        self.sensor.update(self.x, self.y, self.angle);
+        self.sensor
+            .update(self.x, self.y, self.angle, road.boarders());
     }
 
-    pub fn draw(&self, ctx: &CanvasRenderingContext2d) {
+    pub fn draw(&self, ctx: &CanvasRenderingContext2d, road: &Road) {
         ctx.save();
         let _ = ctx.translate(self.x, self.y);
         let _ = ctx.rotate(self.angle.neg());
@@ -89,7 +91,7 @@ impl Car {
         ctx.fill_rect(-self.width / 2., -self.height / 2., self.width, self.height);
         ctx.restore();
 
-        self.sensor.draw(ctx);
+        self.sensor.draw(ctx, road.boarders());
     }
 }
 

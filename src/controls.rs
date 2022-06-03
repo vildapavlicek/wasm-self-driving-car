@@ -1,8 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use wasm_bindgen::prelude::*;
 
-use crate::log;
-
 #[wasm_bindgen]
 #[derive(Debug)]
 pub enum KeyEvent {
@@ -41,35 +39,27 @@ impl Controls {
 
     pub fn set_up_pressed(&self) {
         self.up.store(true, Ordering::Relaxed);
-        log!("up pressed: {:?}", self);
     }
     pub fn set_up_released(&self) {
         self.up.store(false, Ordering::Relaxed);
-        log!("up released: {:?}", self);
     }
     pub fn set_right_pressed(&self) {
         self.right.store(true, Ordering::Relaxed);
-        log!("right pressed: {:?}", self);
     }
     pub fn set_right_released(&self) {
         self.right.store(false, Ordering::Relaxed);
-        log!("right released: {:?}", self);
     }
     pub fn set_down_pressed(&self) {
         self.down.store(true, Ordering::Relaxed);
-        log!("down pressed: {:?}", self);
     }
     pub fn set_down_released(&self) {
         self.down.store(false, Ordering::Relaxed);
-        log!("down released: {:?}", self);
     }
     pub fn set_left_pressed(&self) {
         self.left.store(true, Ordering::Relaxed);
-        log!("left pressed: {:?}", self);
     }
     pub fn set_left_released(&self) {
         self.left.store(false, Ordering::Relaxed);
-        log!("left release: {:?}", self);
     }
 
     // getters

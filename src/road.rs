@@ -1,46 +1,9 @@
 use js_sys::Array;
-use std::ops::Neg;
+use std::ops::{Deref, Neg};
 use wasm_bindgen::prelude::*;
 
 // if set too high, lanes won't be drawn
 const INFINITY: f64 = 10_000 as f64;
-
-#[wasm_bindgen]
-#[derive(Debug, Copy, Clone)]
-pub struct Border {
-    top_x: f64,
-    top_y: f64,
-    bottom_x: f64,
-    bottom_y: f64,
-}
-
-#[wasm_bindgen]
-impl Border {
-    pub fn new(top_x: f64, top_y: f64, bottom_x: f64, bottom_y: f64) -> Border {
-        Border {
-            top_x,
-            top_y,
-            bottom_x,
-            bottom_y,
-        }
-    }
-
-    pub fn top_x(&self) -> f64 {
-        self.top_x
-    }
-
-    pub fn top_y(&self) -> f64 {
-        self.top_y
-    }
-
-    pub fn bottom_x(&self) -> f64 {
-        self.bottom_x
-    }
-
-    pub fn bottom_y(&self) -> f64 {
-        self.bottom_y
-    }
-}
 
 #[wasm_bindgen]
 #[derive(Debug)]
@@ -53,7 +16,7 @@ pub struct Road {
 
     top: f64,
     bottom: f64,
-    borders: Vec<Border>,
+    borders: Vec<((f64, f64), (f64, f64))>,
     dash_line: Array,
 }
 
@@ -66,16 +29,14 @@ impl Road {
         let top = INFINITY.neg();
         let bottom = INFINITY;
 
-        let left_border = Border::new(left, top, left, bottom);
-        let right_border = Border::new(right, top, right, bottom);
+        let borders = vec![
+            ((left, top), (left, bottom)),
+            ((right, top), (right, bottom)),
+        ];
 
-        let borders = vec![left_border, right_border];
         let dash_line = Array::new();
-        // dash_line.fill(&JsValue::from(20), 0, 2);
         dash_line.push(&JsValue::from(20));
         dash_line.push(&JsValue::from(20));
-
-        crate::log!("{:?}", dash_line);
 
         Self {
             x,
@@ -118,10 +79,6 @@ impl Road {
         self.right
     }
 
-    pub fn borders(&self) -> Array {
-        self.borders.iter().copied().map(JsValue::from).collect()
-    }
-
     pub fn lane_center(&self, lane_index: i32) -> f64 {
         let lane_width = self.width / self.lane_count as f64;
         self.left + lane_width / 2. + (lane_index.min(self.lane_count - 1) as f64) * lane_width
@@ -144,11 +101,17 @@ impl Road {
 
         let _ = ctx.set_line_dash(Array::new().as_ref());
 
-        self.borders.iter().for_each(|b| {
+        self.borders.iter().for_each(|(start, end)| {
             ctx.begin_path();
-            ctx.move_to(b.top_x(), b.top_y());
-            ctx.line_to(b.bottom_x(), b.bottom_y());
+            ctx.move_to(start.0, start.1);
+            ctx.line_to(end.0, end.1);
             ctx.stroke();
         });
+    }
+}
+
+impl Road {
+    pub fn boarders(&self) -> &[((f64, f64), (f64, f64))] {
+        self.borders.deref()
     }
 }
