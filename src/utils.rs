@@ -48,3 +48,14 @@ pub fn get_intersection(
         }
     }
 }
+
+pub fn polys_intersection(poly1: &[(f64, f64)], poly2: &[((f64, f64), (f64, f64))]) -> bool {
+    for polygon in poly1.windows(2) {
+        for polygon2 in poly2 {
+            if let Some(_) = get_intersection(polygon[0], polygon[1], polygon2.0, polygon2.1) {
+                return true;
+            }
+        }
+    }
+    false
+}

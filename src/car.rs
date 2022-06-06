@@ -4,6 +4,7 @@ use crate::{
     sensors::Sensor,
 };
 use std::ops::Neg;
+use std::{f64::consts::PI, ops::Deref};
 use wasm_bindgen::prelude::*;
 use web_sys::CanvasRenderingContext2d;
 
@@ -23,6 +24,8 @@ pub struct Car {
     angle: f64, // = 0;
     controls: Controls,
     sensor: Sensor,
+    polygons: Vec<(f64, f64)>,
+    damaged: bool,
 }
 
 #[wasm_bindgen]
@@ -37,6 +40,8 @@ impl Car {
             angle: 0.0,
             controls: Controls::default(),
             sensor: Sensor::new(3, 100., std::f64::consts::PI / 4.),
+            polygons: vec![],
+            damaged: false,
         }
     }
 
@@ -78,18 +83,30 @@ impl Car {
 
     pub fn update(&mut self, road: &Road) {
         self.move_car();
+
+        self.create_polygon();
+        self.resolve_damage(road);
+
         self.sensor
             .update(self.x, self.y, self.angle, road.boarders());
     }
 
     pub fn draw(&self, ctx: &CanvasRenderingContext2d, road: &Road) {
-        ctx.save();
-        let _ = ctx.translate(self.x, self.y);
-        let _ = ctx.rotate(self.angle.neg());
+        match self.damaged {
+            true => ctx.set_fill_style(&JsValue::from_str("gray")),
+            false => ctx.set_fill_style(&JsValue::from_str("black")),
+        };
 
         ctx.begin_path();
-        ctx.fill_rect(-self.width / 2., -self.height / 2., self.width, self.height);
-        ctx.restore();
+        let first = self.polygons.first().unwrap();
+        ctx.move_to(first.0, first.1);
+
+        self.polygons
+            .iter()
+            .skip(1)
+            .for_each(|p| ctx.line_to(p.0, p.1));
+
+        ctx.fill();
 
         self.sensor.draw(ctx, road.boarders());
     }
@@ -138,5 +155,39 @@ impl Car {
 
         self.x -= self.angle.sin() * self.speed;
         self.y -= self.angle.cos() * self.speed;
+    }
+
+    fn create_polygon(&mut self) {
+        self.polygons.clear();
+        let rad = self.width.hypot(self.height) / 2.;
+        let alpha = self.width.atan2(self.height);
+
+        // compute top right corner
+        self.polygons.push((
+            self.x - (self.angle - alpha).sin() * rad,
+            self.y - (self.angle - alpha).cos() * rad,
+        ));
+
+        // compute top left corner
+        self.polygons.push((
+            self.x - (self.angle + alpha).sin() * rad,
+            self.y - (self.angle + alpha).cos() * rad,
+        ));
+
+        // compute bottom right corner
+        self.polygons.push((
+            self.x - (PI + self.angle - alpha).sin() * rad,
+            self.y - (PI + self.angle - alpha).cos() * rad,
+        ));
+
+        // compute bottom left corner
+        self.polygons.push((
+            self.x - (PI + self.angle + alpha).sin() * rad,
+            self.y - (PI + self.angle + alpha).cos() * rad,
+        ));
+    }
+
+    fn resolve_damage(&mut self, road: &Road) {
+        self.damaged = crate::utils::polys_intersection(self.polygons.deref(), road.boarders());
     }
 }
