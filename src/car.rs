@@ -129,9 +129,11 @@ impl Car {
     }
 
     pub fn draw(&self, ctx: &CanvasRenderingContext2d, road: &Road, traffic: &Traffic) {
-        match self.damaged {
-            true => ctx.set_fill_style(&JsValue::from_str("gray")),
-            false => ctx.set_fill_style(&JsValue::from_str("black")),
+        match (self.damaged, self.controls.control_type) {
+            (true, _) => ctx.set_fill_style(&JsValue::from_str("gray")),
+            (false, ControlType::Keyboard) => ctx.set_fill_style(&JsValue::from_str("blue")),
+            (false, ControlType::NoControl) => ctx.set_fill_style(&JsValue::from_str("red")),
+            _ => ctx.set_fill_style(&JsValue::from_str("cyan")),
         };
 
         ctx.begin_path();
