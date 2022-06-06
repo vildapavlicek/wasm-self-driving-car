@@ -1,5 +1,11 @@
-use std::sync::atomic::{AtomicBool, Ordering};
 use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub enum ControlType {
+    Keyboard,
+    NoControl,
+}
 
 #[wasm_bindgen]
 #[derive(Debug)]
@@ -15,16 +21,27 @@ pub enum KeyEvent {
 }
 
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Controls {
-    up: AtomicBool,
-    right: AtomicBool,
-    down: AtomicBool,
-    left: AtomicBool,
+    pub(crate) control_type: ControlType,
+    pub up: bool,
+    pub right: bool,
+    pub down: bool,
+    pub left: bool,
 }
 
 impl Controls {
-    pub fn handle_key_input(&self, event: KeyEvent) {
+    pub fn new(control_type: ControlType) -> Self {
+        Controls {
+            control_type,
+            up: false,
+            right: false,
+            down: false,
+            left: false,
+        }
+    }
+
+    pub fn handle_key_input(&mut self, event: KeyEvent) {
         match event {
             KeyEvent::UpPressed => self.set_up_pressed(),
             KeyEvent::UpReleased => self.set_up_released(),
@@ -37,54 +54,55 @@ impl Controls {
         }
     }
 
-    pub fn set_up_pressed(&self) {
-        self.up.store(true, Ordering::Relaxed);
+    pub fn set_up_pressed(&mut self) {
+        self.up = true
     }
-    pub fn set_up_released(&self) {
-        self.up.store(false, Ordering::Relaxed);
+    pub fn set_up_released(&mut self) {
+        self.up = false
     }
-    pub fn set_right_pressed(&self) {
-        self.right.store(true, Ordering::Relaxed);
+    pub fn set_right_pressed(&mut self) {
+        self.right = true
     }
-    pub fn set_right_released(&self) {
-        self.right.store(false, Ordering::Relaxed);
+    pub fn set_right_released(&mut self) {
+        self.right = false
     }
-    pub fn set_down_pressed(&self) {
-        self.down.store(true, Ordering::Relaxed);
+    pub fn set_down_pressed(&mut self) {
+        self.down = true
     }
-    pub fn set_down_released(&self) {
-        self.down.store(false, Ordering::Relaxed);
+    pub fn set_down_released(&mut self) {
+        self.down = false
     }
-    pub fn set_left_pressed(&self) {
-        self.left.store(true, Ordering::Relaxed);
+    pub fn set_left_pressed(&mut self) {
+        self.left = true
     }
-    pub fn set_left_released(&self) {
-        self.left.store(false, Ordering::Relaxed);
+    pub fn set_left_released(&mut self) {
+        self.left = false
     }
 
     // getters
     pub fn up(&self) -> bool {
-        self.up.load(Ordering::Relaxed)
+        self.up
     }
 
     pub fn right(&self) -> bool {
-        self.right.load(Ordering::Relaxed)
+        self.right
     }
     pub fn down(&self) -> bool {
-        self.down.load(Ordering::Relaxed)
+        self.down
     }
     pub fn left(&self) -> bool {
-        self.left.load(Ordering::Relaxed)
+        self.left
     }
 }
 
 impl std::default::Default for Controls {
     fn default() -> Self {
         Self {
-            up: AtomicBool::new(false),
-            right: AtomicBool::new(false),
-            down: AtomicBool::new(false),
-            left: AtomicBool::new(false),
+            control_type: ControlType::NoControl,
+            up: true,
+            right: false,
+            down: false,
+            left: false,
         }
     }
 }

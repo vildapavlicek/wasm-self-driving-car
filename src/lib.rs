@@ -2,6 +2,7 @@ pub mod car;
 pub mod controls;
 pub mod road;
 pub mod sensors;
+pub mod traffic;
 pub mod utils;
 
 use wasm_bindgen::prelude::*;

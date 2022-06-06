@@ -1,7 +1,8 @@
 use crate::{
-    controls::{Controls, KeyEvent},
+    controls::{ControlType, Controls, KeyEvent},
     road::Road,
     sensors::Sensor,
+    traffic::Traffic,
 };
 use std::ops::Neg;
 use std::{f64::consts::PI, ops::Deref};
@@ -10,27 +11,39 @@ use web_sys::CanvasRenderingContext2d;
 
 const ANGLE_TURN: f64 = 0.03;
 const FRICTION: f64 = 0.05;
-const MAX_SPEED: f64 = 3.;
 const ACCELERATION: f64 = 0.2;
 
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Car {
     x: f64,
     y: f64,
     width: f64,
     height: f64,
     speed: f64,
+    max_speed: f64,
     angle: f64, // = 0;
     controls: Controls,
-    sensor: Sensor,
+    sensor: Option<Sensor>,
     polygons: Vec<(f64, f64)>,
     damaged: bool,
 }
 
 #[wasm_bindgen]
 impl Car {
-    pub fn new(x: f64, y: f64, width: f64, height: f64) -> Car {
+    pub fn new(
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        controls: Controls,
+        max_speed: f64,
+    ) -> Self {
+        let sensor = match controls.control_type {
+            ControlType::Keyboard => Some(Sensor::new(5, 100., std::f64::consts::PI / 2.)),
+            _ => None,
+        };
+
         Car {
             x,
             y,
@@ -38,11 +51,27 @@ impl Car {
             height,
             speed: 0.0,
             angle: 0.0,
-            controls: Controls::default(),
-            sensor: Sensor::new(3, 100., std::f64::consts::PI / 4.),
+            controls,
+            sensor,
             polygons: vec![],
             damaged: false,
+            max_speed,
         }
+    }
+
+    pub fn keyboard_controlled(x: f64, y: f64, width: f64, height: f64) -> Self {
+        Car::new(
+            x,
+            y,
+            width,
+            height,
+            Controls::new(ControlType::Keyboard),
+            3.0,
+        )
+    }
+
+    pub fn no_control(x: f64, y: f64, width: f64, height: f64, max_speed: f64) -> Self {
+        Car::new(x, y, width, height, Controls::default(), max_speed)
     }
 
     pub fn x(&self) -> f64 {
@@ -65,8 +94,10 @@ impl Car {
         self.angle
     }
 
-    pub fn handle_key_input(&self, event: KeyEvent) {
-        self.controls.handle_key_input(event);
+    pub fn handle_key_input(&mut self, event: KeyEvent) {
+        if let ControlType::Keyboard = self.controls.control_type {
+            self.controls.handle_key_input(event);
+        }
     }
 
     pub fn decelerate(&mut self) {
@@ -81,17 +112,23 @@ impl Car {
         self.angle -= ANGLE_TURN;
     }
 
-    pub fn update(&mut self, road: &Road) {
-        self.move_car();
+    pub fn update(&mut self, road: &Road, traffic: &Traffic) {
+        match self.damaged {
+            true => (),
+            _ => {
+                self.move_car();
 
-        self.create_polygon();
-        self.resolve_damage(road);
+                self.create_polygon();
+                self.damaged = self.resolve_damage(road, traffic);
+            }
+        }
 
-        self.sensor
-            .update(self.x, self.y, self.angle, road.boarders());
+        if let Some(sensor) = self.sensor.as_mut() {
+            sensor.update(self.x, self.y, self.angle, road.boarders(), traffic);
+        }
     }
 
-    pub fn draw(&self, ctx: &CanvasRenderingContext2d, road: &Road) {
+    pub fn draw(&self, ctx: &CanvasRenderingContext2d, road: &Road, traffic: &Traffic) {
         match self.damaged {
             true => ctx.set_fill_style(&JsValue::from_str("gray")),
             false => ctx.set_fill_style(&JsValue::from_str("black")),
@@ -108,7 +145,9 @@ impl Car {
 
         ctx.fill();
 
-        self.sensor.draw(ctx, road.boarders());
+        if let Some(sensor) = self.sensor.as_ref() {
+            sensor.draw(ctx, road.boarders(), traffic);
+        }
     }
 }
 
@@ -133,12 +172,12 @@ impl Car {
             }
         }
 
-        if self.speed > MAX_SPEED {
-            self.speed = MAX_SPEED;
+        if self.speed > self.max_speed {
+            self.speed = self.max_speed;
         }
 
-        if self.speed < MAX_SPEED.neg() / 2. {
-            self.speed = MAX_SPEED.neg() / 2.;
+        if self.speed < self.max_speed.neg() / 2. {
+            self.speed = self.max_speed.neg() / 2.;
         }
 
         if self.speed > 0. {
@@ -187,7 +226,19 @@ impl Car {
         ));
     }
 
-    fn resolve_damage(&mut self, road: &Road) {
-        self.damaged = crate::utils::polys_intersection(self.polygons.deref(), road.boarders());
+    pub fn polygons(&self) -> &[(f64, f64)] {
+        self.polygons.deref()
+    }
+
+    fn resolve_damage(&mut self, road: &Road, traffic: &Traffic) -> bool {
+        if crate::utils::poly_intersection_with_borders(self.polygons.deref(), road.boarders()) {
+            return true;
+        };
+
+        traffic
+            .0
+            .iter()
+            .find(|car| crate::utils::poly_intersection_with_poly(self.polygons(), car.polygons()))
+            .is_some()
     }
 }

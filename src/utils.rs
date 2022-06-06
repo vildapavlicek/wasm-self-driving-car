@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
     // `set_panic_hook` function at least once during initialization, and then
@@ -13,7 +15,7 @@ pub fn lerp(a: f64, b: f64, t: f64) -> f64 {
     a + t * (b - a)
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct IntersectionPoint {
     pub x: f64,
     pub y: f64,
@@ -49,10 +51,24 @@ pub fn get_intersection(
     }
 }
 
-pub fn polys_intersection(poly1: &[(f64, f64)], poly2: &[((f64, f64), (f64, f64))]) -> bool {
-    for polygon in poly1.windows(2) {
-        for polygon2 in poly2 {
-            if let Some(_) = get_intersection(polygon[0], polygon[1], polygon2.0, polygon2.1) {
+pub fn poly_intersection_with_borders(
+    poly1: &[(f64, f64)],
+    borders: &[((f64, f64), (f64, f64))],
+) -> bool {
+    for (polygon_1, polygon_2) in poly1.iter().circular_tuple_windows() {
+        for border in borders {
+            if let Some(_) = get_intersection(*polygon_1, *polygon_2, border.0, border.1) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+pub fn poly_intersection_with_poly(poly1: &[(f64, f64)], poly2: &[(f64, f64)]) -> bool {
+    for (polygon_1, polygon_2) in poly1.iter().circular_tuple_windows() {
+        for (polygon_3, polygon_4) in poly2.iter().circular_tuple_windows() {
+            if let Some(_) = get_intersection(*polygon_1, *polygon_2, *polygon_3, *polygon_4) {
                 return true;
             }
         }
