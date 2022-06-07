@@ -3,8 +3,9 @@ use itertools::Itertools;
 use js_sys::Math::random;
 use wasm_bindgen::prelude::wasm_bindgen;
 
+#[wasm_bindgen]
 #[derive(Debug)]
-pub struct NeuralNetwork(pub Vec<Level>);
+pub struct NeuralNetwork(#[wasm_bindgen(skip)] pub Vec<Level>);
 
 impl NeuralNetwork {
     pub fn new(neuron_counts: &[usize]) -> Self {
@@ -105,7 +106,7 @@ impl Level {
                     * self
                         .weights
                         .get(j)
-                        .and_then(|w| w.get(i).map(|i| *i))
+                        .and_then(|w| w.get(i).copied())
                         .expect("expected weights value but none was found");
             }
 

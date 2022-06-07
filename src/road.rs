@@ -1,9 +1,10 @@
+use crate::utils::Boarders;
 use js_sys::Array;
 use std::ops::{Deref, Neg};
 use wasm_bindgen::prelude::*;
 
 // if set too high, lanes won't be drawn
-const INFINITY: f64 = 10_000 as f64;
+const INFINITY: f64 = 10_000.;
 
 #[wasm_bindgen]
 #[derive(Debug)]
@@ -112,7 +113,7 @@ impl Road {
 }
 
 impl Road {
-    pub fn boarders(&self) -> &[((f64, f64), (f64, f64))] {
+    pub fn boarders(&self) -> &Boarders {
         self.borders.deref()
     }
 }

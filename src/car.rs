@@ -274,7 +274,6 @@ impl Car {
         traffic
             .0
             .iter()
-            .find(|car| crate::utils::poly_intersection_with_poly(self.polygons(), car.polygons()))
-            .is_some()
+            .any(|car| crate::utils::poly_intersection_with_poly(self.polygons(), car.polygons()))
     }
 }

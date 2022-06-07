@@ -10,9 +10,7 @@ pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-pub fn bool_from_f64(value: f64) -> bool {
-    value > 0.
-}
+pub type Boarders = [((f64, f64), (f64, f64))];
 
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn lerp(a: f64, b: f64, t: f64) -> f64 {
@@ -42,7 +40,7 @@ pub fn get_intersection(
             let t = t_top / bottom;
             let u = u_top / bottom;
 
-            if t >= 0. && t <= 1. && u >= 0. && u <= 1. {
+            if (0. ..=1.).contains(&t) && (0. ..=1.).contains(&u) {
                 let x = lerp(a.0, b.0, t);
                 let y = lerp(a.1, b.1, t);
                 let offset = t;
@@ -55,13 +53,10 @@ pub fn get_intersection(
     }
 }
 
-pub fn poly_intersection_with_borders(
-    poly1: &[(f64, f64)],
-    borders: &[((f64, f64), (f64, f64))],
-) -> bool {
+pub fn poly_intersection_with_borders(poly1: &[(f64, f64)], borders: &Boarders) -> bool {
     for (polygon_1, polygon_2) in poly1.iter().circular_tuple_windows() {
         for border in borders {
-            if let Some(_) = get_intersection(*polygon_1, *polygon_2, border.0, border.1) {
+            if get_intersection(*polygon_1, *polygon_2, border.0, border.1).is_some() {
                 return true;
             }
         }
@@ -72,7 +67,7 @@ pub fn poly_intersection_with_borders(
 pub fn poly_intersection_with_poly(poly1: &[(f64, f64)], poly2: &[(f64, f64)]) -> bool {
     for (polygon_1, polygon_2) in poly1.iter().circular_tuple_windows() {
         for (polygon_3, polygon_4) in poly2.iter().circular_tuple_windows() {
-            if let Some(_) = get_intersection(*polygon_1, *polygon_2, *polygon_3, *polygon_4) {
+            if get_intersection(*polygon_1, *polygon_2, *polygon_3, *polygon_4).is_some() {
                 return true;
             }
         }

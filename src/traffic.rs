@@ -33,3 +33,9 @@ impl Traffic {
         }
     }
 }
+
+impl Default for Traffic {
+    fn default() -> Self {
+        Traffic::new()
+    }
+}

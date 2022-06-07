@@ -1,6 +1,6 @@
 use crate::{
     traffic::Traffic,
-    utils::{get_intersection, IntersectionPoint},
+    utils::{get_intersection, Boarders, IntersectionPoint},
 };
 use itertools::Itertools;
 use std::ops::Neg;
@@ -65,7 +65,7 @@ impl Sensor {
         x: f64,
         y: f64,
         angle: f64,
-        road_borders: &[((f64, f64), (f64, f64))],
+        road_borders: &Boarders,
         traffic: &Traffic,
     ) {
         self.cast_rays(x, y, angle);
@@ -107,28 +107,23 @@ impl Sensor {
 
 fn get_reading(
     (ray_start, ray_end): ((f64, f64), (f64, f64)),
-    road_borders: &[((f64, f64), (f64, f64))],
+    road_borders: &Boarders,
     traffic: &Traffic,
 ) -> Option<IntersectionPoint> {
     let mut contacts = vec![];
     road_borders.iter().for_each(|(border_start, border_end)| {
-        get_intersection(ray_start, ray_end, *border_start, *border_end).and_then(
-            |intersection_point| {
-                contacts.push(intersection_point);
-                Some(())
-            },
-        );
+        if let Some(intersection) = get_intersection(ray_start, ray_end, *border_start, *border_end)
+        {
+            contacts.push(intersection);
+        }
     });
 
     for car in traffic.0.iter() {
         let poly = car.polygons();
         for (poly_w_1, poly_w_2) in poly.iter().circular_tuple_windows() {
-            get_intersection(ray_start, ray_end, *poly_w_1, *poly_w_2).and_then(
-                |intersection_point| {
-                    contacts.push(intersection_point);
-                    Some(())
-                },
-            );
+            if let Some(intersection) = get_intersection(ray_start, ray_end, *poly_w_1, *poly_w_2) {
+                contacts.push(intersection);
+            }
         }
     }
 

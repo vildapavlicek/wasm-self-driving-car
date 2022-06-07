@@ -5,7 +5,12 @@ import * as wasm from "hello-wasm-pack";
  // initialize canvas
  const carCanvas = document.getElementById("carCanvas");
  carCanvas.width = 200;
- const ctx = carCanvas.getContext("2d");
+ const carCtx = carCanvas.getContext("2d");
+
+
+ const networkCanvas = document.getElementById("networkCanvas");
+ networkCanvas.width = 300;
+ const networkCtx = networkCanvas.getContext("2d");
 
 
 // init road
@@ -30,15 +35,16 @@ function animate() {
     car.update(road, traffic);
 
     carCanvas.height = window.innerHeight;
+    networkCanvas.height = window.innerHeight;
 
-    ctx.save();
-    ctx.translate(0, -car.y() + carCanvas.height * 0.7);
-    road.draw(ctx);
+    carCtx.save();
+    carCtx.translate(0, -car.y() + carCanvas.height * 0.7);
+    road.draw(carCtx);
 
-    traffic.draw(ctx);
+    traffic.draw(carCtx);
 
-    car.draw(ctx);
-    ctx.restore();
+    car.draw(carCtx);
+    carCtx.restore();
 
     requestAnimationFrame(animate);
  }
