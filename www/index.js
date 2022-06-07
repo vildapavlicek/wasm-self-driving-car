@@ -3,26 +3,24 @@ import * as wasm from "hello-wasm-pack";
  import { Car, KeyEvent, Road, Border, Traffic, Level } from "wasm-self-driving-car";
 
  // initialize canvas
- const canvas = document.getElementById("myCanvas");
- canvas.width = 200;
- const ctx = canvas.getContext("2d");
+ const carCanvas = document.getElementById("carCanvas");
+ carCanvas.width = 200;
+ const ctx = carCanvas.getContext("2d");
 
 
 // init road
-const road = Road.new(canvas.width / 2, canvas.width * 0.9, 3);
+const road = Road.new(carCanvas.width / 2, carCanvas.width * 0.9, 3);
 // get our car
-const car = Car.keyboard_controlled(road.lane_center(1), 100, 30, 50);
+const car = Car.ai_controlled(road.lane_center(1), 100, 30, 50);
 // other cars
 const traffic = Traffic.new();
 
-traffic.add(Car.no_control(road.lane_center(2), -100, 30, 50, 0));
-traffic.add(Car.no_control(road.lane_center(1), -100, 30, 50, 0));
-traffic.add(Car.no_control(road.lane_center(0), -100, 30, 50, 0));
+// traffic.add(Car.no_control(road.lane_center(2), -100, 30, 50, 0));
+traffic.add(Car.no_control(road.lane_center(1), -100, 30, 50, 2));
+// traffic.add(Car.no_control(road.lane_center(0), -100, 30, 50, 0));
 
 addKeyboardListeners();
 animate();
-
-Level.new(5, 4);
 
 
 function animate() {
@@ -31,15 +29,15 @@ function animate() {
 
     car.update(road, traffic);
 
-    canvas.height = window.innerHeight;
+    carCanvas.height = window.innerHeight;
 
     ctx.save();
-    ctx.translate(0, -car.y() + canvas.height * 0.7);
+    ctx.translate(0, -car.y() + carCanvas.height * 0.7);
     road.draw(ctx);
 
-    traffic.draw(ctx, road);
+    traffic.draw(ctx);
 
-    car.draw(ctx, road, traffic);
+    car.draw(ctx);
     ctx.restore();
 
     requestAnimationFrame(animate);

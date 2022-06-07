@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 pub enum ControlType {
     Keyboard,
     NoControl,
+    Ai,
 }
 
 #[wasm_bindgen]
@@ -25,9 +26,9 @@ pub enum KeyEvent {
 pub struct Controls {
     pub(crate) control_type: ControlType,
     pub up: bool,
+    pub left: bool,
     pub right: bool,
     pub down: bool,
-    pub left: bool,
 }
 
 impl Controls {

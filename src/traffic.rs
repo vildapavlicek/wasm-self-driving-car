@@ -27,9 +27,9 @@ impl Traffic {
         }
     }
 
-    pub fn draw(&mut self, ctx: &CanvasRenderingContext2d, road: &Road) {
+    pub fn draw(&mut self, ctx: &CanvasRenderingContext2d) {
         for car in &mut self.0 {
-            car.draw(ctx, road, &Traffic::new());
+            car.draw(ctx);
         }
     }
 }

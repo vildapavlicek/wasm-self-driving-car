@@ -10,6 +10,10 @@ pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
+pub fn bool_from_f64(value: f64) -> bool {
+    value > 0.
+}
+
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn lerp(a: f64, b: f64, t: f64) -> f64 {
     a + t * (b - a)

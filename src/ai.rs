@@ -3,6 +3,7 @@ use itertools::Itertools;
 use js_sys::Math::random;
 use wasm_bindgen::prelude::wasm_bindgen;
 
+#[derive(Debug)]
 pub struct NeuralNetwork(pub Vec<Level>);
 
 impl NeuralNetwork {
@@ -50,7 +51,7 @@ pub struct Level {
 #[wasm_bindgen]
 impl Level {
     pub fn new(input_count: usize, output_count: usize) -> Self {
-        log!("creating new level; input coue: {input_count}, output count: {output_count}",);
+        log!("creating new level; input count: {input_count}, output count: {output_count}",);
         Level {
             inputs: vec![0.; input_count],
             outputs: vec![0.; output_count],
@@ -78,28 +79,28 @@ impl Level {
             self.biases.push(random() * 2.0 - 1.0);
         }
 
-        log!("randomized self: {self:#?}");
+        // log!("randomized self: {self:#?}");
 
         self
     }
 
     pub fn feed_forward(&mut self, inputs: &[f64]) -> Vec<f64> {
-        log!("old inputs: {:?},\nnew inputs: {inputs:?}", self.inputs);
+        // log!("old inputs: {:?},\nnew inputs: {inputs:?}", self.inputs);
 
         self.inputs
             .iter_mut()
             .zip(inputs.iter())
             .for_each(|(old_input, new_input)| *old_input = *new_input);
 
-        log!("replaced old inputs: {:?}", self.inputs);
+        // log!("replaced old inputs: {:?}", self.inputs);
 
-        log!("outputs are {:?}", self.outputs);
+        // log!("outputs are {:?}", self.outputs);
         for (i, output) in self.outputs.iter_mut().enumerate() {
             let mut sum = 0.;
             for (j, _) in self.inputs.iter().enumerate() {
                 sum += self
                     .inputs
-                    .get(i)
+                    .get(j)
                     .expect("expected input value, but none was found")
                     * self
                         .weights
@@ -110,21 +111,21 @@ impl Level {
 
             *output = match self.biases.get(i) {
                 Some(b) if sum > *b => {
-                    log!("sum {} bias {}, resolved to 1.", sum, b);
+                    //log!("sum {} bias {}, resolved to 1.", sum, b);
                     1.
                 }
                 Some(b) if sum < *b => {
-                    log!("sum {} bias {}, resolved to 0.", sum, b);
+                    //log!("sum {} bias {}, resolved to 0.", sum, b);
                     0.
                 }
                 _ => {
-                    log!("bias not found!");
+                    //log!("bias not found!");
                     0.
                 }
             }
         }
 
-        log!("new outputs {:?}", self.outputs);
+        // log!("new outputs {:?}", self.outputs);
 
         self.outputs.clone()
     }

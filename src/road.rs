@@ -23,6 +23,7 @@ pub struct Road {
 #[wasm_bindgen]
 impl Road {
     pub fn new(x: f64, width: f64, lane_count: i32) -> Self {
+        crate::utils::set_panic_hook();
         let left = x - width / 2.;
         let right = x + width / 2.;
 

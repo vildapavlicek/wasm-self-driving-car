@@ -16,7 +16,7 @@ pub struct Sensor {
     //#[wasm_bindgen(skip)]
     /// [((start_x, start_y), (end_x, end_y))]
     rays: Vec<((f64, f64), (f64, f64))>,
-    readings: Vec<IntersectionPoint>,
+    readings: Vec<Option<IntersectionPoint>>,
 }
 
 #[wasm_bindgen]
@@ -31,7 +31,7 @@ impl Sensor {
             ray_length,
             ray_spread,
             rays,
-            readings: vec![],
+            readings: vec![None; ray_count as usize],
         }
     }
 }
@@ -69,24 +69,15 @@ impl Sensor {
         traffic: &Traffic,
     ) {
         self.cast_rays(x, y, angle);
-        let mut readings = vec![];
-        self.rays.iter().copied().for_each(|ray| {
-            get_reading(ray, road_borders, traffic).and_then(|reading| {
-                readings.push(reading);
-                Some(())
-            });
-        });
-        self.readings = readings;
+        self.rays
+            .iter()
+            .zip(self.readings.iter_mut())
+            .for_each(|(ray, reading)| *reading = get_reading(*ray, road_borders, traffic));
     }
 
-    pub fn draw(
-        &self,
-        ctx: &CanvasRenderingContext2d,
-        road_borders: &[((f64, f64), (f64, f64))],
-        traffic: &Traffic,
-    ) {
-        for (start, end) in self.rays.iter() {
-            let contact_point = match get_reading((*start, *end), road_borders, traffic) {
+    pub fn draw(&self, ctx: &CanvasRenderingContext2d) {
+        for ((start, end), reading) in self.rays.iter().zip(self.readings.iter()) {
+            let contact_point = match reading {
                 Some(contact_point) => (contact_point.x, contact_point.y),
                 None => *end,
             };
@@ -107,6 +98,10 @@ impl Sensor {
             ctx.line_to(contact_point.0, contact_point.1);
             ctx.stroke();
         }
+    }
+
+    pub fn readings(&self) -> &[Option<IntersectionPoint>] {
+        &self.readings
     }
 }
 
