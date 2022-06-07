@@ -19,7 +19,7 @@ const RAYS_COUNT: usize = 5;
 #[derive(Debug)]
 pub struct Car {
     x: f64,
-    y: f64,
+    pub y: f64,
     width: f64,
     height: f64,
     speed: f64,
@@ -90,42 +90,10 @@ impl Car {
         Car::new(x, y, width, height, Controls::new(ControlType::Ai), 3.0)
     }
 
-    pub fn x(&self) -> f64 {
-        self.x
-    }
-
-    pub fn y(&self) -> f64 {
-        self.y
-    }
-
-    pub fn width(&self) -> f64 {
-        self.width
-    }
-
-    pub fn height(&self) -> f64 {
-        self.height
-    }
-
-    pub fn angle(&self) -> f64 {
-        self.angle
-    }
-
     pub fn handle_key_input(&mut self, event: KeyEvent) {
         if let ControlType::Keyboard = self.controls.control_type {
             self.controls.handle_key_input(event);
         }
-    }
-
-    pub fn decelerate(&mut self) {
-        self.speed -= 2.;
-    }
-
-    pub fn turn_left(&mut self) {
-        self.angle += ANGLE_TURN;
-    }
-
-    pub fn turn_right(&mut self) {
-        self.angle -= ANGLE_TURN;
     }
 
     pub fn update(&mut self, road: &Road, traffic: &Traffic) {

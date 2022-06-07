@@ -32,9 +32,10 @@ fn test_new_nn() {
     assert_eq!(nn.0.len(), 3);
 }
 
-#[wasm_bindgen_test]
+/* #[wasm_bindgen_test]
 fn test_feed_forward_nn() {
     let mut nn = NeuralNetwork::new(&[2, 2, 2]);
     let outputs = nn.feed_forward(vec![1., 2.]);
     assert_eq!(outputs, vec![0., 0.]);
 }
+ */
