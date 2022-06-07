@@ -1,6 +1,6 @@
 import * as wasm from "hello-wasm-pack";
  // import * as self_driving_car from "wasm-self-driving-car";
- import { Car, KeyEvent, Road, Border, Traffic } from "wasm-self-driving-car";
+ import { Car, KeyEvent, Road, Border, Traffic, Level } from "wasm-self-driving-car";
 
  // initialize canvas
  const canvas = document.getElementById("myCanvas");
@@ -15,12 +15,15 @@ const car = Car.keyboard_controlled(road.lane_center(1), 100, 30, 50);
 // other cars
 const traffic = Traffic.new();
 
-traffic.add(Car.no_control(road.lane_center(2), -100, 30, 50, 5));
+traffic.add(Car.no_control(road.lane_center(2), -100, 30, 50, 0));
 traffic.add(Car.no_control(road.lane_center(1), -100, 30, 50, 0));
-traffic.add(Car.no_control(road.lane_center(0), -100, 30, 50, 2));
+traffic.add(Car.no_control(road.lane_center(0), -100, 30, 50, 0));
 
 addKeyboardListeners();
 animate();
+
+Level.new(5, 4);
+
 
 function animate() {
 
