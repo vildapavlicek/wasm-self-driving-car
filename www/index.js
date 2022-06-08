@@ -16,7 +16,7 @@
 const road = Road.new(carCanvas.width / 2, carCanvas.width * 0.9, 3);
 // get our car
 //const car = Car.ai_controlled(road.lane_center(1), 100, 30, 50);
-const cars = gen_cars(100);
+const cars = gen_cars(1000);
 
 let bestCar = cars[0];
 
@@ -39,7 +39,15 @@ if (localStorage.getItem("bestBrain")) {
 // other cars
 const traffic = Traffic.new();
 
-traffic.add(Car.no_control(road.lane_center(1), -100, 30, 50, 2));
+traffic.add(Car.no_control(road.lane_center(0), -100, 30, 50, 2));
+traffic.add(Car.no_control(road.lane_center(2), -100, 30, 50, 2));
+
+traffic.add(Car.no_control(road.lane_center(1), -250, 30, 50, 2));
+
+traffic.add(Car.no_control(road.lane_center(0), -500, 30, 50, 2));
+traffic.add(Car.no_control(road.lane_center(1), -500, 30, 50, 2));
+
+traffic.add(Car.no_control(road.lane_center(2), -650, 30, 50, 2));
 
 addKeyboardListeners();
 animate();
