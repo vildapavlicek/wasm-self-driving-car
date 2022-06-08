@@ -29,7 +29,7 @@ impl Traffic {
 
     pub fn draw(&mut self, ctx: &CanvasRenderingContext2d) {
         for car in &mut self.0 {
-            car.draw(ctx);
+            car.draw(ctx, false);
         }
     }
 }

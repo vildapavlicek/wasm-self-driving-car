@@ -95,6 +95,14 @@ impl Car {
         self.brain.clone()
     }
 
+    pub fn serialize_brain(&self) -> String {
+        serde_json::to_string(&self.brain).expect("failed to serialize brain")
+    }
+
+    pub fn deserialize_brain(&mut self, json: String) {
+        self.brain = serde_json::from_str::<NeuralNetwork>(&json).ok();
+    }
+
     pub fn handle_key_input(&mut self, event: KeyEvent) {
         if let ControlType::Keyboard = self.controls.control_type {
             self.controls.handle_key_input(event);
@@ -121,21 +129,18 @@ impl Car {
                             .collect::<Vec<f64>>();
 
                         let outputs = brain.feed_forward(offsets);
-                        crate::log!("{outputs:#?}");
 
                         self.controls.up = outputs[0] == 1.;
                         self.controls.left = outputs[1] == 1.;
                         self.controls.right = outputs[2] == 1.;
                         self.controls.down = outputs[3] == 1.;
-
-                        crate::log!("{:#?}", self.controls);
                     }
                 }
             }
         }
     }
 
-    pub fn draw(&self, ctx: &CanvasRenderingContext2d) {
+    pub fn draw(&self, ctx: &CanvasRenderingContext2d, draw_sensor: bool) {
         match (self.damaged, self.controls.control_type) {
             (true, _) => ctx.set_fill_style(&JsValue::from_str("gray")),
             (false, ControlType::Keyboard) => ctx.set_fill_style(&JsValue::from_str("blue")),
@@ -154,9 +159,14 @@ impl Car {
 
         ctx.fill();
 
-        if let Some(sensor) = self.sensor.as_ref() {
-            sensor.draw(ctx);
+        match self.sensor.as_ref() {
+            Some(sensor) if draw_sensor => sensor.draw(ctx),
+            _ => (),
         }
+
+        /* if let Some(sensor) = self.sensor.as_ref() {
+            sensor.draw(ctx);
+        } */
     }
 }
 

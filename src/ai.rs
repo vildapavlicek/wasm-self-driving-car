@@ -4,7 +4,7 @@ use js_sys::Math::random;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NeuralNetwork(#[wasm_bindgen(skip)] pub Vec<Level>);
 
 impl NeuralNetwork {
@@ -18,25 +18,25 @@ impl NeuralNetwork {
     }
 
     pub fn feed_forward(&mut self, inputs: Vec<f64>) -> Vec<f64> {
-        log!("neural netwrok input: {inputs:?}");
+        //log!("neural netwrok input: {inputs:?}");
         let mut outputs = self
             .0
             .first_mut()
             .expect("no neural network provided")
             .feed_forward(&inputs);
 
-        log!("neural network output: {outputs:?}");
+        //log!("neural network output: {outputs:?}");
 
         for level in self.0.iter_mut().skip(1) {
             outputs = level.feed_forward(&outputs);
-            log!("neural network output: {outputs:?}");
+            //  log!("neural network output: {outputs:?}");
         }
 
         outputs
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Level {
     pub inputs: Vec<f64>,
     pub outputs: Vec<f64>,
@@ -46,7 +46,7 @@ pub struct Level {
 
 impl Level {
     pub fn new(input_count: usize, output_count: usize) -> Self {
-        log!("creating new level; input count: {input_count}, output count: {output_count}",);
+        //log!("creating new level; input count: {input_count}, output count: {output_count}",);
         Level {
             inputs: vec![0.; input_count],
             outputs: vec![0.; output_count],

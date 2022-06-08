@@ -1,4 +1,3 @@
-import * as wasm from "hello-wasm-pack";
  // import * as self_driving_car from "wasm-self-driving-car";
  import { Car, KeyEvent, Road, Border, Traffic, Level, Visualizer } from "wasm-self-driving-car";
 
@@ -11,44 +10,66 @@ import * as wasm from "hello-wasm-pack";
  const networkCanvas = document.getElementById("networkCanvas");
  networkCanvas.width = 300;
  const networkCtx = networkCanvas.getContext("2d");
-
+ 
 
 // init road
 const road = Road.new(carCanvas.width / 2, carCanvas.width * 0.9, 3);
 // get our car
-const car = Car.ai_controlled(road.lane_center(1), 100, 30, 50);
+//const car = Car.ai_controlled(road.lane_center(1), 100, 30, 50);
+const cars = gen_cars(100);
+
+let bestCar = cars[0];
+
+
+const save_btn = document.getElementById("save");
+save_btn.addEventListener("click", save);
+
+const discard_btn = document.getElementById("discard");
+discard_btn.addEventListener("click", discard);
+
+if (localStorage.getItem("bestBrain")) {
+    bestCar.deserialize_brain(localStorage.getItem("bestBrain"));
+}
+
 // other cars
 const traffic = Traffic.new();
 
-// traffic.add(Car.no_control(road.lane_center(2), -100, 30, 50, 0));
 traffic.add(Car.no_control(road.lane_center(1), -100, 30, 50, 2));
-// traffic.add(Car.no_control(road.lane_center(0), -100, 30, 50, 0));
 
 addKeyboardListeners();
 animate();
-
 
 function animate(time) {
 
     traffic.update(road);
 
-    console.log()
-    car.update(road, traffic);
+    cars.forEach(car => { car.update(road, traffic); });
+
+    bestCar = cars.find(
+        c => c.y == Math.min(
+            ...cars.map(c=>c.y)
+        )
+    );
 
     carCanvas.height = window.innerHeight;
     networkCanvas.height = window.innerHeight;
 
     carCtx.save();
-    carCtx.translate(0, -car.y + carCanvas.height * 0.7);
+    carCtx.translate(0, -bestCar.y + carCanvas.height * 0.7);
     road.draw(carCtx);
 
     traffic.draw(carCtx);
 
-    car.draw(carCtx);
+    carCtx.globalAlpha = 0.2;
+    cars.forEach(car => { car.draw(carCtx, false); });
+    carCtx.globalAlpha = 1;
+
+    bestCar.draw(carCtx, true);
+
     carCtx.restore();
 
     networkCtx.lineDashOffset = time / -50;
-    Visualizer.draw_network(networkCtx, car.brain());
+    Visualizer.draw_network(networkCtx, bestCar.brain());
     requestAnimationFrame(animate);
  }
 
@@ -98,4 +119,22 @@ function addKeyboardListeners() {
                     car.handle_key_input(key_event);
                }
            }
+}
+
+function gen_cars(N) {
+    const cars = [];
+    for (let i = 0; i < N; i++) {
+        cars.push(Car.ai_controlled(road.lane_center(1), 100, 30, 50, i));
+    }
+    return cars; 
+}
+
+function save() {
+    console.log("saving brain");
+    localStorage.setItem("bestBrain", bestCar.serialize_brain());
+}
+
+function discard() {
+    console.log("discarding brain");
+    localStorage.removeItem("bestBrain");
 }
