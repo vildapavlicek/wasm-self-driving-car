@@ -95,6 +95,10 @@ impl Car {
         self.brain.clone()
     }
 
+    pub fn set_brain(&mut self, brain: Option<NeuralNetwork>) {
+        self.brain = brain;
+    }
+
     pub fn serialize_brain(&self) -> String {
         serde_json::to_string(&self.brain).expect("failed to serialize brain")
     }
@@ -107,6 +111,10 @@ impl Car {
         if let ControlType::Keyboard = self.controls.control_type {
             self.controls.handle_key_input(event);
         }
+    }
+
+    pub fn mutate(&mut self, mutation: f64) {
+        self.brain = self.brain.take().map(|brain| brain.mutate(mutation));
     }
 
     pub fn update(&mut self, road: &Road, traffic: &Traffic) {
@@ -163,10 +171,6 @@ impl Car {
             Some(sensor) if draw_sensor => sensor.draw(ctx),
             _ => (),
         }
-
-        /* if let Some(sensor) = self.sensor.as_ref() {
-            sensor.draw(ctx);
-        } */
     }
 }
 

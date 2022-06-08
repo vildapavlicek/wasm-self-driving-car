@@ -1,5 +1,5 @@
  // import * as self_driving_car from "wasm-self-driving-car";
- import { Car, KeyEvent, Road, Border, Traffic, Level, Visualizer } from "wasm-self-driving-car";
+ import { Car, KeyEvent, Road, Border, Traffic, Level, Visualizer, NeuralNetwork } from "wasm-self-driving-car";
 
  // initialize canvas
  const carCanvas = document.getElementById("carCanvas");
@@ -28,7 +28,12 @@ const discard_btn = document.getElementById("discard");
 discard_btn.addEventListener("click", discard);
 
 if (localStorage.getItem("bestBrain")) {
-    bestCar.deserialize_brain(localStorage.getItem("bestBrain"));
+
+    const brain = NeuralNetwork.deserialize_brain(localStorage.getItem("bestBrain"));
+    cars.forEach(c => c.set_brain(brain.mutate(0.3)));
+    cars[0].set_brain(brain);
+
+    //bestCar.deserialize_brain(localStorage.getItem("bestBrain"));
 }
 
 // other cars

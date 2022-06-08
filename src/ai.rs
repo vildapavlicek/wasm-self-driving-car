@@ -1,7 +1,8 @@
-use crate::log;
 use itertools::Itertools;
 use js_sys::Math::random;
 use wasm_bindgen::prelude::wasm_bindgen;
+
+use crate::utils::lerp;
 
 #[wasm_bindgen]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -18,21 +19,46 @@ impl NeuralNetwork {
     }
 
     pub fn feed_forward(&mut self, inputs: Vec<f64>) -> Vec<f64> {
-        //log!("neural netwrok input: {inputs:?}");
         let mut outputs = self
             .0
             .first_mut()
             .expect("no neural network provided")
             .feed_forward(&inputs);
 
-        //log!("neural network output: {outputs:?}");
-
         for level in self.0.iter_mut().skip(1) {
             outputs = level.feed_forward(&outputs);
-            //  log!("neural network output: {outputs:?}");
         }
 
         outputs
+    }
+}
+
+#[wasm_bindgen]
+impl NeuralNetwork {
+    pub fn serialize_brain(&self) -> String {
+        serde_json::to_string(&self).expect("failed to serialize brain")
+    }
+
+    pub fn deserialize_brain(json: String) -> Option<NeuralNetwork> {
+        serde_json::from_str::<NeuralNetwork>(&json).ok()
+    }
+
+    pub fn mutate(&self, mutation_rate: f64) -> Self {
+        let mut levels = self.0.clone();
+
+        for level in levels.iter_mut() {
+            for bias in level.biases.iter_mut() {
+                *bias = lerp(*bias, random() * 2. - 1., mutation_rate);
+            }
+
+            for weight_vec in level.weights.iter_mut() {
+                for weight in weight_vec.iter_mut() {
+                    *weight = lerp(*weight, random() * 2. - 1., mutation_rate);
+                }
+            }
+        }
+
+        Self(levels)
     }
 }
 
@@ -46,7 +72,6 @@ pub struct Level {
 
 impl Level {
     pub fn new(input_count: usize, output_count: usize) -> Self {
-        //log!("creating new level; input count: {input_count}, output count: {output_count}",);
         Level {
             inputs: vec![0.; input_count],
             outputs: vec![0.; output_count],
@@ -69,27 +94,19 @@ impl Level {
             self.weights.push(weights);
         }
 
-        //
         for _ in 0..self.outputs.len() {
             self.biases.push(random() * 2.0 - 1.0);
         }
-
-        // log!("randomized self: {self:#?}");
 
         self
     }
 
     pub fn feed_forward(&mut self, inputs: &[f64]) -> Vec<f64> {
-        // log!("old inputs: {:?},\nnew inputs: {inputs:?}", self.inputs);
-
         self.inputs
             .iter_mut()
             .zip(inputs.iter())
             .for_each(|(old_input, new_input)| *old_input = *new_input);
 
-        // log!("replaced old inputs: {:?}", self.inputs);
-
-        // log!("outputs are {:?}", self.outputs);
         for (i, output) in self.outputs.iter_mut().enumerate() {
             let mut sum = 0.;
             for (j, _) in self.inputs.iter().enumerate() {
@@ -105,31 +122,12 @@ impl Level {
             }
 
             *output = match self.biases.get(i) {
-                Some(b) if sum > *b => {
-                    //log!("sum {} bias {}, resolved to 1.", sum, b);
-                    1.
-                }
-                Some(b) if sum < *b => {
-                    //log!("sum {} bias {}, resolved to 0.", sum, b);
-                    0.
-                }
-                _ => {
-                    //log!("bias not found!");
-                    0.
-                }
+                Some(b) if sum > *b => 1.,
+                Some(b) if sum < *b => 0.,
+                _ => 0.,
             }
         }
-
-        // log!("new outputs {:?}", self.outputs);
 
         self.outputs.clone()
     }
 }
-
-/* #[test]
-fn level_feed_forward_test() {
-    let mut level = Level::new(2, 2);
-    level.feed_forward(vec![1., 2.]);
-    assert_eq!(level.inputs, vec![1., 2.]);
-}
- */
