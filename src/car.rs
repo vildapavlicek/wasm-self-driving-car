@@ -71,6 +71,7 @@ impl Car {
         }
     }
 
+    // todo I believe this can be removed
     pub fn keyboard_controlled(x: f64, y: f64, width: f64, height: f64) -> Self {
         Car::new(
             x,
@@ -88,6 +89,10 @@ impl Car {
 
     pub fn ai_controlled(x: f64, y: f64, width: f64, height: f64) -> Self {
         Car::new(x, y, width, height, Controls::new(ControlType::Ai), 3.0)
+    }
+
+    pub fn brain(&self) -> Option<NeuralNetwork> {
+        self.brain.clone()
     }
 
     pub fn handle_key_input(&mut self, event: KeyEvent) {

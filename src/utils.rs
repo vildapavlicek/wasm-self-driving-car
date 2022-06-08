@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use wasm_bindgen::JsValue;
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -73,4 +74,21 @@ pub fn poly_intersection_with_poly(poly1: &[(f64, f64)], poly2: &[(f64, f64)]) -
         }
     }
     false
+}
+
+pub fn get_rgba(value: f64) -> JsValue {
+    let alpha = value.abs();
+    let r = match value.is_sign_negative() {
+        true => 0,
+        _ => 255,
+    };
+
+    let g = r;
+
+    let b = match value.is_sign_positive() {
+        true => 0,
+        _ => 255,
+    };
+
+    JsValue::from(format!("rgba({r}, {g}, {b}, {alpha})"))
 }

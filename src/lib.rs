@@ -5,7 +5,7 @@ pub mod road;
 pub mod sensors;
 pub mod traffic;
 pub mod utils;
-
+pub mod visualizer;
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]

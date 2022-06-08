@@ -1,2 +1,2 @@
 
-Implementation of [Self-Driving Car with JavaScript Course – Neural Networks and Machine Learning](https://www.youtube.com/watch?v=Rs_rAxEsAvI&t=395s&ab_channel=freeCodeCamp.org) but in Rust with WASM
+Implementation of [Self-Driving Car with JavaScript Course – Neural Networks and Machine Learning](https://www.youtube.com/watch?v=Rs_rAxEsAvI&t=395s&ab_channel=freeCodeCamp.org) & [Visualizing Neural Networks](https://www.youtube.com/watch?v=lok3RVBwSqE) but in Rust with WASM

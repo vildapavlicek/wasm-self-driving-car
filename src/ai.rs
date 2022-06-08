@@ -4,7 +4,7 @@ use js_sys::Math::random;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NeuralNetwork(#[wasm_bindgen(skip)] pub Vec<Level>);
 
 impl NeuralNetwork {
@@ -36,20 +36,14 @@ impl NeuralNetwork {
     }
 }
 
-#[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Level {
-    #[wasm_bindgen(skip)]
     pub inputs: Vec<f64>,
-    #[wasm_bindgen(skip)]
     pub outputs: Vec<f64>,
-    #[wasm_bindgen(skip)]
     pub biases: Vec<f64>,
-    #[wasm_bindgen(skip)]
     pub weights: Vec<Vec<f64>>,
 }
 
-#[wasm_bindgen]
 impl Level {
     pub fn new(input_count: usize, output_count: usize) -> Self {
         log!("creating new level; input count: {input_count}, output count: {output_count}",);

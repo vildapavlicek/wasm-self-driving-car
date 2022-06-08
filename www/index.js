@@ -1,6 +1,6 @@
 import * as wasm from "hello-wasm-pack";
  // import * as self_driving_car from "wasm-self-driving-car";
- import { Car, KeyEvent, Road, Border, Traffic, Level } from "wasm-self-driving-car";
+ import { Car, KeyEvent, Road, Border, Traffic, Level, Visualizer } from "wasm-self-driving-car";
 
  // initialize canvas
  const carCanvas = document.getElementById("carCanvas");
@@ -28,10 +28,11 @@ addKeyboardListeners();
 animate();
 
 
-function animate() {
+function animate(time) {
 
     traffic.update(road);
 
+    console.log()
     car.update(road, traffic);
 
     carCanvas.height = window.innerHeight;
@@ -46,6 +47,8 @@ function animate() {
     car.draw(carCtx);
     carCtx.restore();
 
+    networkCtx.lineDashOffset = time / -50;
+    Visualizer.draw_network(networkCtx, car.brain());
     requestAnimationFrame(animate);
  }
 
