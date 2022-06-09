@@ -12,13 +12,15 @@ const RAY_LENGTH = 120;
 // and we mapped 1 output neuron to each direction
 const OUTPUT_LAYER_NEURONS = 4;
 
+//window.addEventListener("resize", resize);
+
 // initialize canvas
 const carCanvas = document.getElementById("carCanvas");
 carCanvas.width = 200;
 const carCtx = carCanvas.getContext("2d");
 
 const networkCanvas = document.getElementById("networkCanvas");
-networkCanvas.width = 600;
+
 const networkCtx = networkCanvas.getContext("2d");
 
 const startPauseBtn = document.getElementById("startPause");
@@ -50,15 +52,21 @@ let simulation = new Simulation(
 simulation.run();
 
 addKeyboardListeners();
-simulationStep();
+animate();
 // animate();
 
-function simulationStep() {
+function animate() {
   carCanvas.height = window.innerHeight;
   networkCanvas.height = window.innerHeight;
-
+  networkCanvas.width = window.innerWidth * 0.4;
   simulation.step(carCtx, networkCtx);
-  requestAnimationFrame(simulationStep);
+  requestAnimationFrame(animate);
+}
+
+function resize() {
+  carCanvas.height = window.innerHeight;
+  networkCanvas.height = window.innerHeight;
+  networkCanvas.width = window.innerWidth * 0.4;
 }
 
 function addKeyboardListeners() {
@@ -123,18 +131,25 @@ function startPause() {
   console.log(simulation.state);
   switch (simulation.state) {
     case SimulationState.Stopped:
-        console.log("window", window, "config", config, "simulation:", simulation);
+      console.log(
+        "window",
+        window,
+        "config",
+        config,
+        "simulation:",
+        simulation
+      );
       simulation = new Simulation(
         carCanvas.width,
         window,
         new Config(
-            3,
-            100,
-            RAYS_COUNT,
-            RAY_LENGTH,
-            [RAYS_COUNT, 6, OUTPUT_LAYER_NEURONS],
-            0.2
-          )
+          3,
+          100,
+          RAYS_COUNT,
+          RAY_LENGTH,
+          [RAYS_COUNT, 6, OUTPUT_LAYER_NEURONS],
+          0.2
+        )
       ).add_basic_traffic();
       simulation.run();
       break;
