@@ -47,7 +47,8 @@ features = [
   'MouseEvent',
   'Node',
   'Window',
-  'console'
+  'console',
+  'Storage'
 ]
 
 

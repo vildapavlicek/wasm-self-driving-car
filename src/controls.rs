@@ -22,7 +22,7 @@ pub enum KeyEvent {
 }
 
 #[wasm_bindgen]
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy)]
 pub struct Controls {
     pub(crate) control_type: ControlType,
     pub up: bool,

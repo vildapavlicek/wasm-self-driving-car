@@ -6,6 +6,14 @@ pub mod sensors;
 pub mod traffic;
 pub mod utils;
 pub mod visualizer;
+
+use ai::NeuralNetwork;
+use car::Car;
+use traffic::Traffic;
+use visualizer::Visualizer;
+use wasm_bindgen::prelude::wasm_bindgen;
+use web_sys::CanvasRenderingContext2d;
+
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
@@ -16,5 +24,230 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 macro_rules! log {
     ( $( $t:tt )* ) => {
         web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
+
+pub const CARS_COUNT_DEFAULT: usize = 100;
+pub const CAR_Y_DEFAULT: f64 = 100.;
+pub const CAR_WIDHT_DEFAULT: f64 = 30.;
+pub const CAR_HEIGHT_DEFAULT: f64 = 50.;
+pub const RAYS_COUNT_DEFAULT: usize = 5;
+pub const RAYS_LENGTH_DEFAULT: f64 = 120.;
+
+pub const LANES_COUNT_DEFAULT: i32 = 3;
+
+pub const NEURONS_COUNTS_DEFAULT: [usize; 3] = [RAYS_COUNT_DEFAULT, 6, 4];
+pub const MUTATION_RATE_DEFAULT: f64 = 0.3;
+
+const LOCAL_STORAGE_KEY: &str = "bestBrain";
+
+#[wasm_bindgen]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum SimulationState {
+    Running,
+    Paused,
+    Stopped,
+}
+
+#[wasm_bindgen]
+#[derive(Debug)]
+pub struct Config {
+    pub lanes_count: usize,
+    pub cars_count: usize,
+    pub rays_count: usize,
+    pub ray_lenght: f64,
+    #[wasm_bindgen(skip)]
+    pub neurons_counts: Vec<u32>,
+    pub mutation_rate: f64,
+}
+
+#[wasm_bindgen]
+impl Config {
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        lanes_count: usize,
+        cars_count: usize,
+        rays_count: usize,
+        ray_lenght: f64,
+        neurons_count: js_sys::Uint32Array,
+        mutation_rate: f64,
+    ) -> Self {
+        Self {
+            lanes_count,
+            cars_count,
+            rays_count,
+            ray_lenght,
+            neurons_counts: neurons_count.to_vec(),
+            mutation_rate,
+        }
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Debug)]
+pub struct Simulation {
+    pub state: SimulationState,
+    traffic: traffic::Traffic,
+    cars: Vec<car::Car>,
+    road: road::Road,
+    config: Config,
+}
+
+#[wasm_bindgen]
+impl Simulation {
+    #[wasm_bindgen(constructor)]
+    pub fn new(car_canvas_width: f64, window: &web_sys::Window, config: Config) -> Self {
+        let road = road::Road::new(
+            car_canvas_width / 2.,
+            car_canvas_width * 0.9,
+            LANES_COUNT_DEFAULT,
+        );
+
+        let brain = match window.local_storage() {
+            Ok(Some(storage)) => match storage.get_item("bestBrain").ok().flatten() {
+                Some(raw_brain) => {
+                    log!("found stored brain");
+                    NeuralNetwork::deserialize_brain(raw_brain)
+                }
+                _ => None,
+            },
+            _ => None,
+        };
+
+        Simulation {
+            state: SimulationState::Stopped,
+            traffic: Traffic::new(),
+            cars: Car::generate_cars_same(road.lane_center(1), brain, &config),
+            road,
+            config,
+        }
+    }
+
+    pub fn run(&mut self) {
+        self.state = SimulationState::Running;
+    }
+
+    pub fn pause(&mut self) {
+        self.state = SimulationState::Paused;
+    }
+
+    pub fn stop(&mut self) {
+        self.state = SimulationState::Stopped;
+    }
+
+    pub fn step(
+        &mut self,
+        car_ctx: CanvasRenderingContext2d,
+        network_ctx: CanvasRenderingContext2d,
+    ) {
+        self.update();
+        self.draw(&car_ctx, &network_ctx);
+    }
+
+    pub fn add_basic_traffic(mut self) -> Self {
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(0), -50., 2.));
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(2), -50., 2.));
+        //
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(1), -150., 2.));
+        //
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(0), -250., 2.));
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(1), -250., 2.));
+
+        self
+    }
+
+    pub fn save_best_car(&self, window: &web_sys::Window) {
+        let best_car = self
+            .cars
+            .iter()
+            .min_by(|c1, c2| c1.y.partial_cmp(&c2.y).unwrap())
+            .unwrap();
+
+        let serialized_brain = best_car
+            .brain()
+            .expect("best car doesn't have brain")
+            .serialize_brain();
+
+        window
+            .local_storage()
+            .ok()
+            .flatten()
+            .expect("failed to get local storage")
+            .set_item(LOCAL_STORAGE_KEY, serialized_brain.as_str())
+            .expect("failed to save brain to local storage");
+    }
+
+    pub fn discard_brain(&self, window: &web_sys::Window) {
+        window
+            .local_storage()
+            .ok()
+            .flatten()
+            .expect("failed to get local storage")
+            .delete(LOCAL_STORAGE_KEY)
+            .expect("failed to delete '{LOCAL_STORAGE_KEY}' from local storage");
+    }
+}
+
+impl Simulation {
+    fn update(&mut self) {
+        if !matches!(self.state, SimulationState::Running) {
+            return;
+        }
+
+        // update traffic
+        self.traffic.update(&self.road);
+
+        // update cars
+        for car in self.cars.iter_mut() {
+            car.update(&self.road, &self.traffic);
+        }
+    }
+
+    fn draw(&mut self, car_ctx: &CanvasRenderingContext2d, network_ctx: &CanvasRenderingContext2d) {
+        if matches!(self.state, SimulationState::Stopped) {
+            return;
+        }
+        // choose our best car
+        let best_car = self
+            .cars
+            .iter_mut()
+            .min_by(|c1, c2| c1.y.partial_cmp(&c2.y).unwrap())
+            .unwrap();
+
+        // draw best cars neural network
+        network_ctx.set_line_dash_offset(best_car.y / 5.);
+        Visualizer::draw_network(
+            &network_ctx,
+            best_car.brain().expect("best car doesn't have brain"),
+        );
+
+        // save context
+        car_ctx.save();
+        // move canvas
+        car_ctx
+            .translate(
+                0.,
+                -best_car.y + car_ctx.canvas().unwrap().height() as f64 * 0.7,
+            )
+            .expect("failed to translate on saved context");
+        self.road.draw(&car_ctx);
+        self.traffic.draw(&car_ctx);
+
+        // first draw best car so we can drop it later
+        best_car.draw(&car_ctx, true);
+
+        // draw rest of the cars
+        car_ctx.set_global_alpha(0.2);
+        for car in self.cars.iter() {
+            car.draw(&car_ctx, false);
+        }
+        car_ctx.set_global_alpha(1.);
+
+        car_ctx.restore();
     }
 }

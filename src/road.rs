@@ -86,7 +86,7 @@ impl Road {
         self.left + lane_width / 2. + (lane_index.min(self.lane_count - 1) as f64) * lane_width
     }
 
-    pub fn draw(&self, ctx: web_sys::CanvasRenderingContext2d) {
+    pub fn draw(&self, ctx: &web_sys::CanvasRenderingContext2d) {
         ctx.set_line_width(5.);
         ctx.set_stroke_style(&JsValue::from_str("white"));
 

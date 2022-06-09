@@ -4,6 +4,7 @@ use crate::{
     road::Road,
     sensors::Sensor,
     traffic::Traffic,
+    Config,
 };
 use std::ops::Neg;
 use std::{f64::consts::PI, ops::Deref};
@@ -13,10 +14,11 @@ use web_sys::CanvasRenderingContext2d;
 const ANGLE_TURN: f64 = 0.03;
 const FRICTION: f64 = 0.05;
 const ACCELERATION: f64 = 0.2;
-const RAYS_COUNT: usize = 5;
+
+// const RAYS_COUNT: usize = 5;
 
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Car {
     x: f64,
     pub y: f64,
@@ -29,70 +31,34 @@ pub struct Car {
     sensor: Option<Sensor>,
     brain: Option<NeuralNetwork>,
     polygons: Vec<(f64, f64)>,
-    damaged: bool,
+    pub damaged: bool,
 }
 
 #[wasm_bindgen]
 impl Car {
-    pub fn new(
+    pub fn no_control(x: f64, y: f64, max_speed: f64) -> Self {
+        Car::new(x, y, 30., 50., Controls::default(), max_speed, None, None)
+    }
+
+    pub fn with_brain(
         x: f64,
         y: f64,
         width: f64,
         height: f64,
-        controls: Controls,
-        max_speed: f64,
+        sensor: Sensor,
+        neurons_counts: &[usize],
+        brain: Option<NeuralNetwork>,
     ) -> Self {
-        let (sensor, brain) = match controls.control_type {
-            ControlType::Keyboard => (Some(Sensor::new(5, 100., std::f64::consts::PI / 2.)), None),
-            ControlType::Ai => (
-                Some(Sensor::new(
-                    RAYS_COUNT as i32,
-                    150.,
-                    std::f64::consts::PI / 2.,
-                )),
-                Some(NeuralNetwork::new(&[RAYS_COUNT, 6, 4])),
-            ),
-            _ => (None, None),
-        };
-
-        Car {
-            x,
-            y,
-            width,
-            height,
-            speed: 0.0,
-            angle: 0.0,
-            controls,
-            sensor,
-            brain,
-            polygons: vec![],
-            damaged: false,
-            max_speed,
-        }
-    }
-
-    // todo I believe this can be removed
-    pub fn keyboard_controlled(x: f64, y: f64, width: f64, height: f64) -> Self {
         Car::new(
             x,
             y,
             width,
             height,
-            Controls::new(ControlType::Keyboard),
+            Controls::new(ControlType::Ai),
             3.0,
+            Some(sensor),
+            brain.or_else(|| Some(NeuralNetwork::new(neurons_counts))),
         )
-    }
-
-    pub fn no_control(x: f64, y: f64, width: f64, height: f64, max_speed: f64) -> Self {
-        Car::new(x, y, width, height, Controls::default(), max_speed)
-    }
-
-    pub fn ai_controlled(x: f64, y: f64, width: f64, height: f64) -> Self {
-        Car::new(x, y, width, height, Controls::new(ControlType::Ai), 3.0)
-    }
-
-    pub fn brain(&self) -> Option<NeuralNetwork> {
-        self.brain.clone()
     }
 
     pub fn set_brain(&mut self, brain: Option<NeuralNetwork>) {
@@ -175,6 +141,75 @@ impl Car {
 }
 
 impl Car {
+    fn new(
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        controls: Controls,
+        max_speed: f64,
+        sensor: Option<Sensor>,
+        brain: Option<NeuralNetwork>,
+    ) -> Self {
+        Car {
+            x,
+            y,
+            width,
+            height,
+            speed: 0.0,
+            angle: 0.0,
+            controls,
+            sensor,
+            brain,
+            polygons: vec![],
+            damaged: false,
+            max_speed,
+        }
+    }
+
+    pub fn ai_default(lane: f64, brain: Option<NeuralNetwork>) -> Self {
+        Car::with_brain(
+            lane,
+            crate::CAR_Y_DEFAULT,
+            crate::CAR_WIDHT_DEFAULT,
+            crate::CAR_HEIGHT_DEFAULT,
+            Sensor::new(
+                crate::RAYS_COUNT_DEFAULT as i32,
+                crate::RAYS_LENGTH_DEFAULT,
+                std::f64::consts::PI / 2.,
+            ),
+            &crate::NEURONS_COUNTS_DEFAULT,
+            brain,
+        )
+    }
+
+    pub fn brain(&self) -> Option<&NeuralNetwork> {
+        self.brain.as_ref()
+    }
+
+    /// Generates vector of cars that will differ only in their brains
+    /// # Arguments
+    /// * `count` - number of cars to generate
+    /// * `y` - y coordinate
+    /// * `brain` - brain to use for each car, first car will have original brain, other brains will be mutated
+    /// * `mutation_rate` - mutation rate for each brain expect first one
+    pub fn generate_cars_same(y: f64, brain: Option<NeuralNetwork>, config: &Config) -> Vec<Car> {
+        let mut cars = Vec::with_capacity(config.cars_count);
+
+        if brain.is_some() {
+            cars.push(Car::ai_default(y, brain.clone()));
+        }
+
+        (0..config.cars_count - 1).for_each(|_| {
+            cars.push(Car::ai_default(
+                y,
+                brain.clone().map(|b| b.mutate(config.mutation_rate)),
+            ))
+        });
+
+        cars
+    }
+
     fn move_car(&mut self) {
         if self.controls.up() {
             self.speed += ACCELERATION;

@@ -57,7 +57,6 @@ impl NeuralNetwork {
                 }
             }
         }
-
         Self(levels)
     }
 }

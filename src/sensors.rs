@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 use web_sys::CanvasRenderingContext2d;
 
 #[wasm_bindgen]
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Sensor {
     ray_count: i32,
     ray_length: f64,

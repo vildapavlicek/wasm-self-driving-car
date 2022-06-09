@@ -13,7 +13,7 @@ pub struct Visualizer;
 
 #[wasm_bindgen]
 impl Visualizer {
-    pub fn draw_network(ctx: CanvasRenderingContext2d, network: NeuralNetwork) {
+    pub fn draw_network(ctx: &CanvasRenderingContext2d, network: &NeuralNetwork) {
         let width = ctx.canvas().unwrap().width() - MARGIN * 2;
         let height = ctx.canvas().unwrap().height() - MARGIN * 2;
 

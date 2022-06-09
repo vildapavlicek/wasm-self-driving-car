@@ -7,12 +7,51 @@
   </head>
   <body>
     <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
-    <canvas id="carCanvas"></canvas>
-    <div id="verticalButtons">
-      <button id="save">💾</button>
-      <button id="discard">🗑️</button>
+    <div id="leftSection">
+      <form id="settingsForm">
+        <label id="", class="settingsFormLabel">lanes count</label>
+        <br>
+        <input id="", type="text", class="settingsFormInput"></input>
+        <br>
+        <br>
+        <label id="", class="settingsFormLabel">cars count</label>
+        <br>
+        <input id="", type="text", class="settingsFormInput"></input>
+        <br>
+        <br>
+        <label id="", class="settingsFormLabel">rays count</label>
+        <br>
+        <input id="", type="text", class="settingsFormInput"></input>
+        <br>
+        <br>
+        <label id="", class="settingsFormLabel">rays length</label>
+        <br>
+        <input id="", type="text", class="settingsFormInput"></input>
+        <br>
+        <br>
+        <label id="", class="settingsFormLabel">neurons counts</label>
+        <br>
+        <input id="", type="text", class="settingsFormInput"></input>
+        <br>
+        <br>
+        <label id="", class="settingsFormLabel">mutation rate</label>
+        <br>
+        <input id="", type="text", class="settingsFormInput"></input>
+      </form>
     </div>
-    <canvas id="networkCanvas"></canvas>
+    <div id="middleSection">
+      <canvas id="carCanvas"></canvas>
+      <div id="verticalButtons">
+        <button id="restart">🔄</button>
+        <button id="startPause">⏯️</button>
+        <button id="stop">🛑</button>
+        <button id="save">💾</button>
+        <button id="discard">🗑️</button>
+      </div>
+    </div>
+    <div id="rightSection">
+      <canvas id="networkCanvas"></canvas>
+    </div>
     <script src="bootstrap.js"></script>
   </body>
 </html>
