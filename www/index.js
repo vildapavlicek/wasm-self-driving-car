@@ -40,6 +40,9 @@ discard_btn.addEventListener("click", discard);
 const runBtn = document.getElementById("runBtn");
 runBtn.addEventListener("click", run);
 
+const spawnBtn = document.getElementById("spawnBtn");
+spawnBtn.addEventListener("click", spawn);
+
 let simulation;
 let config = new Config(
   3,
@@ -129,4 +132,9 @@ function run() {
   simulation.run();
   animate();
   return;
+}
+
+
+function spawn() {
+  simulation.spawn_car(0);
 }

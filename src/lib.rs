@@ -9,7 +9,7 @@ pub mod visualizer;
 
 use std::ops::Deref;
 
-use ai::NeuralNetwork;
+use ai::{agents::Agents, NeuralNetwork};
 use car::Car;
 use road::Road;
 use traffic::Traffic;
@@ -129,7 +129,7 @@ impl Config {
 pub struct Simulation {
     pub state: SimulationState,
     traffic: traffic::Traffic,
-    cars: Vec<car::Car>,
+    agents: Agents,
     road: road::Road,
     config: Config,
 }
@@ -164,7 +164,7 @@ impl Simulation {
             &config,
         );
 
-        Simulation::new(road, cars, Traffic::new(), config.clone())
+        Simulation::new(road, Agents::new(cars), Traffic::new(), config.clone())
     }
 
     pub fn run(&mut self) {
@@ -181,6 +181,18 @@ impl Simulation {
 
     pub fn destroy(self) {
         drop(self);
+    }
+
+    pub fn spawn_car(&mut self, lane_index: i32) {
+        self.traffic.add_car(
+            self.road.lane_center(lane_index),
+            self.agents
+                .best_agent()
+                .expect("no best agent, can't resolve Y coordinate")
+                .y
+                - 500.,
+            2.,
+        )
     }
 
     pub fn step(
@@ -215,15 +227,12 @@ impl Simulation {
     }
 
     pub fn save_best_car(&self, window: &web_sys::Window) {
-        let best_car = self
-            .cars
-            .iter()
-            .min_by(|c1, c2| c1.y.partial_cmp(&c2.y).unwrap())
-            .unwrap();
-
-        let serialized_brain = best_car
+        let serialized_brain = self
+            .agents
+            .best_agent()
+            .expect("no best agent found")
             .brain()
-            .expect("best car doesn't have brain")
+            .expect("agent without brain")
             .serialize_brain();
 
         window
@@ -250,14 +259,14 @@ impl Simulation {
     fn new(
         road: Road,
         // brain: Option<NeuralNetwork>,
-        cars: Vec<Car>,
+        agents: Agents,
         traffic: Traffic,
         config: Config,
     ) -> Self {
         Simulation {
             state: SimulationState::Stopped,
             traffic,
-            cars,
+            agents,
             road,
             config,
         }
@@ -270,29 +279,21 @@ impl Simulation {
 
         // update traffic
         self.traffic.update(&self.road);
-
-        // update cars
-        for car in self.cars.iter_mut() {
-            car.update(&self.road, &self.traffic);
-        }
+        self.agents.update(&self.road, &self.traffic)
     }
 
     fn draw(&mut self, car_ctx: &CanvasRenderingContext2d, network_ctx: &CanvasRenderingContext2d) {
         if matches!(self.state, SimulationState::Stopped) {
             return;
         }
-        // choose our best car
-        let best_car = self
-            .cars
-            .iter_mut()
-            .min_by(|c1, c2| c1.y.partial_cmp(&c2.y).unwrap())
-            .unwrap();
+
+        let best_agent = self.agents.best_agent().expect("no best agent found!");
 
         // draw best cars neural network
-        network_ctx.set_line_dash_offset(best_car.y / 5.);
+        network_ctx.set_line_dash_offset(best_agent.y / 5.);
         Visualizer::draw_network(
             &network_ctx,
-            best_car.brain().expect("best car doesn't have brain"),
+            best_agent.brain().expect("best agent doesn't have brain"),
         );
 
         // save context
@@ -301,21 +302,13 @@ impl Simulation {
         car_ctx
             .translate(
                 0.,
-                -best_car.y + car_ctx.canvas().unwrap().height() as f64 * 0.7,
+                -best_agent.y + car_ctx.canvas().unwrap().height() as f64 * 0.7,
             )
             .expect("failed to translate on saved context");
-        self.road.draw(&car_ctx);
-        self.traffic.draw(&car_ctx);
+        self.road.draw(car_ctx);
+        self.traffic.draw(car_ctx);
 
-        // first draw best car so we can drop it later
-        best_car.draw(&car_ctx, true);
-
-        // draw rest of the cars
-        car_ctx.set_global_alpha(0.2);
-        for car in self.cars.iter() {
-            car.draw(&car_ctx, false);
-        }
-        car_ctx.set_global_alpha(1.);
+        self.agents.draw(car_ctx);
 
         car_ctx.restore();
     }

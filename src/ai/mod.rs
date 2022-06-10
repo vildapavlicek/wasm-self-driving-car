@@ -1,3 +1,5 @@
+pub mod agents;
+
 use itertools::Itertools;
 use js_sys::Math::random;
 use wasm_bindgen::prelude::wasm_bindgen;
