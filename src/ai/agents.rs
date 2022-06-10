@@ -181,4 +181,15 @@ impl Agents {
                     .expect("nth_best: n out of bounds")
         })
     }
+
+    pub fn n_best(&self, count: usize) -> Vec<(AgentId, f64)> {
+        let mut data = self
+            .scores
+            .iter()
+            .map(|(key, value)| (*key, *value))
+            .collect::<Vec<(usize, f64)>>();
+
+        data.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        data.into_iter().take(count).collect()
+    }
 }

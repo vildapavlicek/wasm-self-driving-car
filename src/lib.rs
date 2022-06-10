@@ -11,6 +11,7 @@ use std::ops::Deref;
 
 use ai::{agents::Agents, NeuralNetwork};
 use car::Car;
+use js_sys::Uint32Array;
 use road::Road;
 use traffic::Traffic;
 use visualizer::Visualizer;
@@ -220,6 +221,23 @@ impl Simulation {
         self.config = config.clone();
     }
 
+    #[wasm_bindgen(js_name = top10Agents)]
+    pub fn top_10_agents(&self) -> Uint32Array {
+        Uint32Array::from(
+            self.agents
+                .n_best(10)
+                .into_iter()
+                .map(|(id, _)| id as u32)
+                .collect::<Vec<u32>>()
+                .deref(),
+        )
+    }
+
+    #[wasm_bindgen(js_name = focusAgent)]
+    pub fn focus_agent(&mut self, agent_id: usize) {
+        self.agents.focus_agent(agent_id);
+    }
+
     pub fn add_basic_traffic(mut self) -> Self {
         // |x| |x|
         // | | | |
@@ -238,8 +256,8 @@ impl Simulation {
         self.traffic
             .add(Car::no_control(self.road.lane_center(2), -50., 2.));
         //
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(1), -150., 2.));
+        //self.traffic
+        //    .add(Car::no_control(self.road.lane_center(1), -150., 2.));
         //
         self.traffic
             .add(Car::no_control(self.road.lane_center(0), -250., 2.));

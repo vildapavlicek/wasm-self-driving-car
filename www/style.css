@@ -87,6 +87,35 @@ button {
     border-top: black solid 5px;
 }
 
-#topBorder.emojiHeader  {
+#topBorder.emojiHeader {
     border-bottom: black dashed 3px;
+}
+
+#rankings {
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 20%;
+    height: inherit;
+}
+
+#rankingsTable {
+    font-size: 22px;
+}
+
+table tr:nth-child(1) {
+    font-size: 37px;
+    color: gold;
+}
+
+table tr:nth-child(2) {
+    font-size: 37px;
+    color: silver;
+}
+
+table tr:nth-child(3) {
+    font-size: 37px;
+    color: orange;
 }

@@ -69,11 +69,27 @@ let config = new Config(
 
 initForm(document, config);
 
+generateTable(document);
+
+const tbody = document.getElementById("rankingsTable");
+tbody.addEventListener('click', function (e) {
+  const cell = e.target.closest('td');
+  if (!cell) {return;} // Quit, not clicked on a cell
+  const row = cell.parentElement;
+
+  if (simulation != null) {
+    console.log("focusing agent", cell.innerHTML);
+    simulation.focusAgent(parseInt(cell.innerHTML, 10))
+  }
+
+});
+
 function animate() {
   carCanvas.height = window.innerHeight;
   networkCanvas.height = window.innerHeight;
   networkCanvas.width = window.innerWidth * 0.4;
   simulation.step(carCtx, networkCtx);
+  updateTable(document, simulation.top10Agents());
   animationFrameId = requestAnimationFrame(animate);
 }
 
@@ -139,7 +155,6 @@ function run() {
   return;
 }
 
-
 function spawn() {
   simulation.spawn_car(0);
 }
@@ -150,4 +165,27 @@ function nextAgent() {
 
 function previousAgent() {
   simulation.previous_agent();
+}
+
+function generateTable(document) {
+  let rankingsDiv = document.getElementById("rankings");
+  let table = document.createElement("table");
+  // table.classList.add('rankingsTable');
+  table.setAttribute("id", "rankingsTable");
+
+  for (let i = 0; i < 10; i++) {
+    const tr = table.insertRow();
+    tr.insertCell().innerHTML = i + 1;
+    tr.insertCell().innerHTML = null;
+    rankingsDiv.appendChild(table);
+  }
+}
+
+function updateTable(document, rankings) {
+  let table = document.getElementById("rankingsTable");
+
+  for (let i = 0; i < rankings.length; i++) {
+    table.rows[i].cells[0].innerHTML = i + 1 + '.';
+    table.rows[i].cells[1].innerHTML = rankings[i];
+  }
 }
