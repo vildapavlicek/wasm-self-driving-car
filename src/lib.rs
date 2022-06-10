@@ -66,7 +66,7 @@ pub struct Config {
     #[wasm_bindgen(js_name = raysLength)]
     pub rays_lenght: f64,
     #[wasm_bindgen(skip)]
-    pub neurons_counts: Vec<usize>,
+    pub hidden_layers: Vec<usize>,
     #[wasm_bindgen(js_name = mutationRate)]
     pub mutation_rate: f64,
 }
@@ -80,34 +80,28 @@ impl Config {
         cars_count: usize,
         rays_count: usize,
         rays_lenght: f64,
-        neurons_count: js_sys::Uint32Array,
+        hidden_layers: js_sys::Uint32Array,
         mutation_rate: f64,
     ) -> Self {
-        crate::log!("new config lanes count: {lanes_count}, lane index: {lane_index}, cars count: {cars_count}, rays count: {rays_count}, rays lenght: {rays_lenght}, neurons count: {neurons_count:?}, mutation rate: {mutation_rate}",
-        );
-
-        let x = Self {
+        Self {
             lanes_count,
             lane_index,
             cars_count,
             rays_count,
             rays_lenght,
-            neurons_counts: neurons_count
+            hidden_layers: hidden_layers
                 .to_vec()
                 .into_iter()
                 .map(|x| x as usize)
                 .collect(),
             mutation_rate,
-        };
-
-        crate::log!("new config: {x:?}");
-        x
+        }
     }
 
-    #[wasm_bindgen(method, getter = neuronsCount)]
-    pub fn neurons_count(&self) -> js_sys::Uint32Array {
+    #[wasm_bindgen(method, getter = hiddenLayers)]
+    pub fn hidden_layers(&self) -> js_sys::Uint32Array {
         js_sys::Uint32Array::from(
-            self.neurons_counts
+            self.hidden_layers
                 .iter()
                 .map(|x| *x as u32)
                 .collect::<Vec<u32>>()
@@ -115,9 +109,18 @@ impl Config {
         )
     }
 
-    #[wasm_bindgen(method, setter = neuronsCount)]
-    pub fn set_neurons_count(&mut self, values: js_sys::Uint32Array) {
-        self.neurons_counts = values.to_vec().into_iter().map(|x| x as usize).collect();
+    #[wasm_bindgen(method, setter = hiddenLayers)]
+    pub fn set_hidden_layers(&mut self, values: js_sys::Uint32Array) {
+        self.hidden_layers = values.to_vec().into_iter().map(|x| x as usize).collect();
+    }
+}
+
+impl Config {
+    pub fn neurons_count(&self) -> Vec<usize> {
+        let mut tmp = self.hidden_layers.to_vec();
+        tmp.insert(0, self.rays_count);
+        tmp.push(4);
+        tmp
     }
 }
 

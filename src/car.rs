@@ -178,7 +178,7 @@ impl Car {
                 config.rays_lenght,
                 std::f64::consts::PI / 2.,
             ),
-            config.neurons_counts.deref(),
+            config.neurons_count().deref(),
             brain,
         )
     }
