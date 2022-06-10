@@ -20,6 +20,7 @@ const ACCELERATION: f64 = 0.2;
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Car {
+    id: usize,
     x: f64,
     pub y: f64,
     width: f64,
@@ -37,10 +38,21 @@ pub struct Car {
 #[wasm_bindgen]
 impl Car {
     pub fn no_control(x: f64, y: f64, max_speed: f64) -> Self {
-        Car::new(x, y, 30., 50., Controls::default(), max_speed, None, None)
+        Car::new(
+            0,
+            x,
+            y,
+            30.,
+            50.,
+            Controls::default(),
+            max_speed,
+            None,
+            None,
+        )
     }
 
     pub fn with_brain(
+        id: usize,
         x: f64,
         y: f64,
         width: f64,
@@ -50,6 +62,7 @@ impl Car {
         brain: Option<NeuralNetwork>,
     ) -> Self {
         Car::new(
+            id,
             x,
             y,
             width,
@@ -142,6 +155,7 @@ impl Car {
 
 impl Car {
     fn new(
+        id: usize,
         x: f64,
         y: f64,
         width: f64,
@@ -152,6 +166,7 @@ impl Car {
         brain: Option<NeuralNetwork>,
     ) -> Self {
         Car {
+            id,
             x,
             y,
             width,
@@ -167,8 +182,9 @@ impl Car {
         }
     }
 
-    pub fn ai_default(lane: f64, brain: Option<NeuralNetwork>, config: &Config) -> Self {
+    pub fn ai_default(id: usize, lane: f64, brain: Option<NeuralNetwork>, config: &Config) -> Self {
         Car::with_brain(
+            id,
             lane,
             crate::CAR_Y_DEFAULT,
             crate::CAR_WIDHT_DEFAULT,
@@ -198,11 +214,12 @@ impl Car {
         let mut cars = Vec::with_capacity(config.cars_count);
 
         if brain.is_some() {
-            cars.push(Car::ai_default(x, brain.clone(), config));
+            cars.push(Car::ai_default(config.cars_count, x, brain.clone(), config));
         }
 
-        (0..config.cars_count - 1).for_each(|_| {
+        (0..config.cars_count - 1).for_each(|n| {
             cars.push(Car::ai_default(
+                n,
                 x,
                 brain.clone().map(|b| b.mutate(config.mutation_rate)),
                 config,

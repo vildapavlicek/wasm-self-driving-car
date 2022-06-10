@@ -75,3 +75,18 @@ button {
 .settingsFormInput {
     border-radius: 9px;
 }
+
+.emojiHeader {
+    font-size: 37px;
+    align-self: center;
+    padding-bottom: 10px;
+}
+
+#topBottomBorder.emojiHeader {
+    border-bottom: black dashed 3px;
+    border-top: black solid 5px;
+}
+
+#topBorder.emojiHeader  {
+    border-bottom: black dashed 3px;
+}

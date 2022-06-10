@@ -43,6 +43,12 @@ runBtn.addEventListener("click", run);
 const spawnBtn = document.getElementById("spawnBtn");
 spawnBtn.addEventListener("click", spawn);
 
+const nextAgentBtn = document.getElementById("nextAgentBtn");
+nextAgentBtn.addEventListener("click", nextAgent);
+
+const previousAgentBtn = document.getElementById("previousAgentBtn");
+previousAgentBtn.addEventListener("click", previousAgent);
+
 let simulation;
 let config = new Config(
   3,
@@ -72,7 +78,7 @@ function resize() {
 
 function save() {
   console.log("saving brain");
-  simulation.save_best_car(window);
+  simulation.save_best_focused_car(window);
   alert("brain saved");
 }
 
@@ -83,13 +89,6 @@ function discard() {
 
 function startPause() {
   if (simulation == null) {
-    /* simulation = new Simulation(
-      carCanvas.width,
-      window,
-      config
-    ).add_basic_traffic();
-    simulation.run();
-    animate(); */
     console.log("simulation is null, doing nothing");
     return;
   }
@@ -119,7 +118,6 @@ function stop() {
 }
 
 function run() {
-
   if (simulation != null) {
     cancelAnimationFrame(animationFrameId);
   }
@@ -137,4 +135,12 @@ function run() {
 
 function spawn() {
   simulation.spawn_car(0);
+}
+
+function nextAgent() {
+  simulation.next_agent();
+}
+
+function previousAgent() {
+  simulation.previous_agent();
 }

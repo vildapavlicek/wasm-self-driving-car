@@ -183,6 +183,14 @@ impl Simulation {
         drop(self);
     }
 
+    pub fn next_agent(&mut self) {
+        self.agents.focus_next();
+    }
+
+    pub fn previous_agent(&mut self) {
+        self.agents.focus_previous();
+    }
+
     pub fn spawn_car(&mut self, lane_index: i32) {
         self.traffic.add_car(
             self.road.lane_center(lane_index),
@@ -210,6 +218,18 @@ impl Simulation {
     }
 
     pub fn add_basic_traffic(mut self) -> Self {
+        // |x| |x|
+        // | | | |
+        // |X|x| |
+        // | | | |
+        // | |x|x|
+        // | | | |
+        // |x|x| |
+        // | | | |
+        // | |x| |
+        // | | | |
+        // |x| |x|
+
         self.traffic
             .add(Car::no_control(self.road.lane_center(0), -50., 2.));
         self.traffic
@@ -222,14 +242,28 @@ impl Simulation {
             .add(Car::no_control(self.road.lane_center(0), -250., 2.));
         self.traffic
             .add(Car::no_control(self.road.lane_center(1), -250., 2.));
-
+        //
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(1), -400., 2.));
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(2), -400., 2.));
+        //
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(0), -550., 2.));
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(1), -550., 2.));
+        //
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(0), -700., 2.));
+        self.traffic
+            .add(Car::no_control(self.road.lane_center(2), -700., 2.));
         self
     }
 
-    pub fn save_best_car(&self, window: &web_sys::Window) {
+    pub fn save_best_focused_car(&self, window: &web_sys::Window) {
         let serialized_brain = self
             .agents
-            .best_agent()
+            .focused_agent()
             .expect("no best agent found")
             .brain()
             .expect("agent without brain")
@@ -256,13 +290,7 @@ impl Simulation {
 }
 
 impl Simulation {
-    fn new(
-        road: Road,
-        // brain: Option<NeuralNetwork>,
-        agents: Agents,
-        traffic: Traffic,
-        config: Config,
-    ) -> Self {
+    fn new(road: Road, agents: Agents, traffic: Traffic, config: Config) -> Self {
         Simulation {
             state: SimulationState::Stopped,
             traffic,
@@ -287,13 +315,18 @@ impl Simulation {
             return;
         }
 
-        let best_agent = self.agents.best_agent().expect("no best agent found!");
+        let focused_agent = self
+            .agents
+            .focused_agent()
+            .expect("no focused agent, no agent to follow");
 
         // draw best cars neural network
-        network_ctx.set_line_dash_offset(best_agent.y / 5.);
+        network_ctx.set_line_dash_offset(focused_agent.y / 5.);
         Visualizer::draw_network(
             &network_ctx,
-            best_agent.brain().expect("best agent doesn't have brain"),
+            focused_agent
+                .brain()
+                .expect("best agent doesn't have brain"),
         );
 
         // save context
@@ -302,7 +335,7 @@ impl Simulation {
         car_ctx
             .translate(
                 0.,
-                -best_agent.y + car_ctx.canvas().unwrap().height() as f64 * 0.7,
+                -focused_agent.y + car_ctx.canvas().unwrap().height() as f64 * 0.7,
             )
             .expect("failed to translate on saved context");
         self.road.draw(car_ctx);
