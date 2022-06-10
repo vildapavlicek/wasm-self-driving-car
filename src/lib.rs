@@ -44,6 +44,12 @@ pub const CAR_HEIGHT_DEFAULT: f64 = 50.;
 
 const LOCAL_STORAGE_KEY: &str = "bestBrain";
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+struct Save {
+    brain: NeuralNetwork,
+    config: Config,
+}
+
 #[wasm_bindgen]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum SimulationState {
@@ -53,7 +59,7 @@ pub enum SimulationState {
 }
 
 #[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Config {
     #[wasm_bindgen(js_name = lanesCount)]
     pub lanes_count: usize,
@@ -128,6 +134,21 @@ impl Config {
     }
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            lanes_count: 3,
+            lane_index: 1,
+            cars_count: 100,
+            rays_count: 5,
+            rays_lenght: 120.,
+            rays_spread: 2.,
+            hidden_layers: vec![6],
+            mutation_rate: 0.2,
+        }
+    }
+}
+
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct Simulation {
@@ -148,18 +169,24 @@ impl Simulation {
             config.lanes_count as i32,
         );
 
-        // TODO! if we change config and have stored brain, we used stored brain instead of new one !
-        // os if I have stored brain, but want to do new simulation, with different brain,
-        // I have to delete stored brain first
-        let brain = match window.local_storage() {
+        let save = match window.local_storage() {
             Ok(Some(storage)) => match storage.get_item("bestBrain").ok().flatten() {
-                Some(raw_brain) => {
+                Some(raw_save) => {
                     log!("found stored brain");
-                    NeuralNetwork::deserialize_brain(raw_brain)
+                    //NeuralNetwork::deserialize_brain(raw_brain)
+                    Some(
+                        serde_json::from_str::<Save>(raw_save.as_str())
+                            .expect("failed to deserialize save data"),
+                    )
                 }
                 _ => None,
             },
             _ => None,
+        };
+
+        let (brain, config) = match save {
+            Some(save) => (Some(save.brain), save.config),
+            None => (None, config.clone()),
         };
 
         let cars = Car::generate_cars_same(
@@ -168,7 +195,7 @@ impl Simulation {
             &config,
         );
 
-        Simulation::new(road, Agents::new(cars), Traffic::new(), config.clone())
+        Simulation::new(road, Agents::new(cars), Traffic::new(), config)
     }
 
     pub fn run(&mut self) {
@@ -286,21 +313,27 @@ impl Simulation {
         self
     }
 
+    #[wasm_bindgen(js_name = saveFocusedCar)]
     pub fn save_best_focused_car(&self, window: &web_sys::Window) {
-        let serialized_brain = self
-            .agents
-            .focused_agent()
-            .expect("no best agent found")
-            .brain()
-            .expect("agent without brain")
-            .serialize_brain();
+        let save = Save {
+            brain: self
+                .agents
+                .focused_agent()
+                .expect("no best agent found")
+                .brain()
+                .expect("agent without brain")
+                .clone(),
+            config: self.config.clone(),
+        };
+
+        let serialized_data = serde_json::to_string(&save).expect("failed to serialize save data");
 
         window
             .local_storage()
             .ok()
             .flatten()
             .expect("failed to get local storage")
-            .set_item(LOCAL_STORAGE_KEY, serialized_brain.as_str())
+            .set_item(LOCAL_STORAGE_KEY, serialized_data.as_str())
             .expect("failed to save brain to local storage");
     }
 
@@ -312,6 +345,23 @@ impl Simulation {
             .expect("failed to get local storage")
             .delete(LOCAL_STORAGE_KEY)
             .expect("failed to delete '{LOCAL_STORAGE_KEY}' from local storage");
+    }
+
+    #[wasm_bindgen(js_name = initConfig)]
+    pub fn init_config(window: web_sys::Window) -> Config {
+        match window
+            .local_storage()
+            .ok()
+            .flatten()
+            .expect("failed to get local storage")
+            .get_item(LOCAL_STORAGE_KEY)
+            .expect("failed to retrieve storage data")
+        {
+            Some(item) => serde_json::from_str::<Save>(item.as_str())
+                .map(|save| save.config)
+                .unwrap_or_else(|_| Config::default()),
+            None => Config::default(),
+        }
     }
 }
 

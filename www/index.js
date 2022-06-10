@@ -60,7 +60,9 @@ resetFocusBtn.addEventListener("click", resetFocus);
 
 
 let simulation;
-let config = new Config(
+
+
+/* let config = new Config(
   LANES_COUNT_DEFAULT,
   LANE_INDEX_DEFAULT,
   CARS_COUNT_DEFAULT,
@@ -69,10 +71,12 @@ let config = new Config(
   RAYS_SPREAD_DEFAULT,
   HIDDEN_LAYERS_DEFAULT,
   MUTATION_RATE_DEFAULT
-);
+); */
+
+let config = Simulation.initConfig(window);
+console.log("init config", config);
 
 initForm(document, config);
-
 generateTable(document);
 
 const tbody = document.getElementById("rankingsTable");
@@ -105,7 +109,7 @@ function resize() {
 
 function save() {
   console.log("saving brain");
-  simulation.save_best_focused_car(window);
+  simulation.saveFocusedCar(window);
   alert("brain saved");
 }
 
