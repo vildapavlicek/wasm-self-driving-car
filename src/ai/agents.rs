@@ -149,6 +149,10 @@ impl Agents {
         }
     }
 
+    pub fn focus_best_agent(&mut self) {
+        self.focused_agent = Focus::BestAgent;
+    }
+
     /// Get reference to the n-th agent
     ///
     /// # Arguments

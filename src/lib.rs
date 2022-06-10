@@ -238,6 +238,11 @@ impl Simulation {
         self.agents.focus_agent(agent_id);
     }
 
+    #[wasm_bindgen(js_name = resetFocus)]
+    pub fn reset_focus(&mut self) {
+        self.agents.focus_best_agent();
+    }
+
     pub fn add_basic_traffic(mut self) -> Self {
         // |x| |x|
         // | | | |

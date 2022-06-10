@@ -55,6 +55,10 @@ nextAgentBtn.addEventListener("click", nextAgent);
 const previousAgentBtn = document.getElementById("previousAgentBtn");
 previousAgentBtn.addEventListener("click", previousAgent);
 
+const resetFocusBtn = document.getElementById("resetFocusBtn");
+resetFocusBtn.addEventListener("click", resetFocus);
+
+
 let simulation;
 let config = new Config(
   LANES_COUNT_DEFAULT,
@@ -188,4 +192,9 @@ function updateTable(document, rankings) {
     table.rows[i].cells[0].innerHTML = i + 1 + '.';
     table.rows[i].cells[1].innerHTML = rankings[i];
   }
+}
+
+
+function resetFocus() {
+  simulation.resetFocus();
 }
