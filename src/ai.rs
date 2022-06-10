@@ -121,8 +121,11 @@ impl Level {
             }
 
             *output = match self.biases.get(i) {
-                Some(b) if sum > *b => 1.,
+                //Some(bias) => (sum + bias).clamp(-1., 1.),
+                Some(b) if sum + *b > 0. => 1.,
                 Some(b) if sum < *b => 0.,
+                /* Some(b) if sum > *b => 1.,
+                Some(b) if sum < *b => 0., */
                 _ => 0.,
             }
         }

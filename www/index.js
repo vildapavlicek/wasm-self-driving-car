@@ -47,7 +47,7 @@ let config = new Config(
   100,
   RAYS_COUNT,
   RAY_LENGTH,
-  [RAYS_COUNT, 6, OUTPUT_LAYER_NEURONS],
+  [6],
   0.2
 );
 

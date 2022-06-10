@@ -4,7 +4,7 @@ use std::ops::{Deref, Neg};
 use wasm_bindgen::prelude::*;
 
 // if set too high, lanes won't be drawn
-const INFINITY: f64 = 10_000.;
+const INFINITY: f64 = 100_000.;
 
 #[wasm_bindgen]
 #[derive(Debug)]

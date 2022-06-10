@@ -144,6 +144,9 @@ impl Simulation {
             config.lanes_count as i32,
         );
 
+        // TODO! if we change config and have stored brain, we used stored brain instead of new one !
+        // os if I have stored brain, but want to do new simulation, with different brain,
+        // I have to delete stored brain first
         let brain = match window.local_storage() {
             Ok(Some(storage)) => match storage.get_item("bestBrain").ok().flatten() {
                 Some(raw_brain) => {
