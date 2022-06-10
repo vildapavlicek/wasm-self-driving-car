@@ -37,17 +37,9 @@ macro_rules! error {
     }
 }
 
-pub const CARS_COUNT_DEFAULT: usize = 100;
 pub const CAR_Y_DEFAULT: f64 = 100.;
 pub const CAR_WIDHT_DEFAULT: f64 = 30.;
 pub const CAR_HEIGHT_DEFAULT: f64 = 50.;
-pub const RAYS_COUNT_DEFAULT: usize = 5;
-pub const RAYS_LENGTH_DEFAULT: f64 = 120.;
-
-pub const LANES_COUNT_DEFAULT: i32 = 3;
-
-pub const NEURONS_COUNTS_DEFAULT: [usize; 3] = [RAYS_COUNT_DEFAULT, 6, 4];
-pub const MUTATION_RATE_DEFAULT: f64 = 0.3;
 
 const LOCAL_STORAGE_KEY: &str = "bestBrain";
 
