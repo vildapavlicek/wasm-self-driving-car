@@ -193,7 +193,7 @@ impl Car {
             Sensor::new(
                 config.rays_count as i32,
                 config.rays_lenght,
-                std::f64::consts::PI / 2.,
+                std::f64::consts::PI / config.rays_spread,
             ),
             config.neurons_count().deref(),
             brain,

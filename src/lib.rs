@@ -64,6 +64,8 @@ pub struct Config {
     pub rays_count: usize,
     #[wasm_bindgen(js_name = raysLength)]
     pub rays_lenght: f64,
+    #[wasm_bindgen(js_name = raysSpread)]
+    pub rays_spread: f64,
     #[wasm_bindgen(skip)]
     pub hidden_layers: Vec<usize>,
     #[wasm_bindgen(js_name = mutationRate)]
@@ -79,6 +81,7 @@ impl Config {
         cars_count: usize,
         rays_count: usize,
         rays_lenght: f64,
+        rays_spread: f64,
         hidden_layers: js_sys::Uint32Array,
         mutation_rate: f64,
     ) -> Self {
@@ -88,6 +91,7 @@ impl Config {
             cars_count,
             rays_count,
             rays_lenght,
+            rays_spread,
             hidden_layers: hidden_layers
                 .to_vec()
                 .into_iter()

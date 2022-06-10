@@ -8,8 +8,14 @@ import {
 
 import { getConfigFromForm, initForm } from "./formHandler";
 
+const LANES_COUNT_DEFAULT = 3;
+const LANE_INDEX_DEFAULT = 1;
+const CARS_COUNT_DEFAULT = 100;
 const RAYS_COUNT = 5;
 const RAY_LENGTH = 120;
+const RAYS_SPREAD_DEFAULT = 2;
+const HIDDEN_LAYERS_DEFAULT = [6];
+const MUTATION_RATE_DEFAULT = 0.2;
 // DO NOT CHANGE, we have 4 directions we can go in
 // and we mapped 1 output neuron to each direction
 const OUTPUT_LAYER_NEURONS = 4;
@@ -51,13 +57,14 @@ previousAgentBtn.addEventListener("click", previousAgent);
 
 let simulation;
 let config = new Config(
-  3,
-  1,
-  100,
+  LANES_COUNT_DEFAULT,
+  LANE_INDEX_DEFAULT,
+  CARS_COUNT_DEFAULT,
   RAYS_COUNT,
   RAY_LENGTH,
-  [6],
-  0.2
+  RAYS_SPREAD_DEFAULT,
+  HIDDEN_LAYERS_DEFAULT,
+  MUTATION_RATE_DEFAULT
 );
 
 initForm(document, config);

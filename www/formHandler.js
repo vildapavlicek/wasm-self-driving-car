@@ -6,6 +6,7 @@ export function initForm(document, config) {
   document.getElementById("carsCountInput").value = config.carsCount;
   document.getElementById("raysCountInput").value = config.raysCount;
   document.getElementById("raysLengthInput").value = config.raysLength;
+  document.getElementById("raysSpread").value = config.raysSpread;
   document.getElementById("hiddenLayersInput").value = config.hiddenLayers;
   document.getElementById("mutationRateInput").value = config.mutationRate;
 }
@@ -36,6 +37,7 @@ export function getConfigFromForm(document) {
     document.getElementById("carsCountInput").value,
     parseInt(document.getElementById("raysCountInput").value, 10),
     document.getElementById("raysLengthInput").value,
+    document.getElementById("raysSpread").value,
     document
       .getElementById("hiddenLayersInput")
       .value.split(",")
