@@ -20,7 +20,8 @@ const ACCELERATION: f64 = 0.2;
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Car {
-    id: usize,
+    #[wasm_bindgen(skip)]
+    pub id: usize,
     x: f64,
     pub y: f64,
     width: f64,

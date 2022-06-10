@@ -30,6 +30,13 @@ macro_rules! log {
     }
 }
 
+#[macro_export]
+macro_rules! error {
+    ( $( $t:tt )* ) => {
+        web_sys::console::error_1(&format!( $( $t )* ).into())
+    }
+}
+
 pub const CARS_COUNT_DEFAULT: usize = 100;
 pub const CAR_Y_DEFAULT: f64 = 100.;
 pub const CAR_WIDHT_DEFAULT: f64 = 30.;
