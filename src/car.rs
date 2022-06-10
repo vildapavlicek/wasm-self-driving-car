@@ -167,18 +167,18 @@ impl Car {
         }
     }
 
-    pub fn ai_default(lane: f64, brain: Option<NeuralNetwork>) -> Self {
+    pub fn ai_default(lane: f64, brain: Option<NeuralNetwork>, config: &Config) -> Self {
         Car::with_brain(
             lane,
             crate::CAR_Y_DEFAULT,
             crate::CAR_WIDHT_DEFAULT,
             crate::CAR_HEIGHT_DEFAULT,
             Sensor::new(
-                crate::RAYS_COUNT_DEFAULT as i32,
-                crate::RAYS_LENGTH_DEFAULT,
+                config.rays_count as i32,
+                config.rays_lenght,
                 std::f64::consts::PI / 2.,
             ),
-            &crate::NEURONS_COUNTS_DEFAULT,
+            config.neurons_counts.deref(),
             brain,
         )
     }
@@ -193,17 +193,19 @@ impl Car {
     /// * `y` - y coordinate
     /// * `brain` - brain to use for each car, first car will have original brain, other brains will be mutated
     /// * `mutation_rate` - mutation rate for each brain expect first one
-    pub fn generate_cars_same(y: f64, brain: Option<NeuralNetwork>, config: &Config) -> Vec<Car> {
+    pub fn generate_cars_same(x: f64, brain: Option<NeuralNetwork>, config: &Config) -> Vec<Car> {
+        crate::log!("generating cars {}", config.cars_count);
         let mut cars = Vec::with_capacity(config.cars_count);
 
         if brain.is_some() {
-            cars.push(Car::ai_default(y, brain.clone()));
+            cars.push(Car::ai_default(x, brain.clone(), config));
         }
 
         (0..config.cars_count - 1).for_each(|_| {
             cars.push(Car::ai_default(
-                y,
+                x,
                 brain.clone().map(|b| b.mutate(config.mutation_rate)),
+                config,
             ))
         });
 

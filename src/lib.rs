@@ -7,8 +7,11 @@ pub mod traffic;
 pub mod utils;
 pub mod visualizer;
 
+use std::ops::Deref;
+
 use ai::NeuralNetwork;
 use car::Car;
+use road::Road;
 use traffic::Traffic;
 use visualizer::Visualizer;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -50,14 +53,21 @@ pub enum SimulationState {
 }
 
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
+    #[wasm_bindgen(js_name = lanesCount)]
     pub lanes_count: usize,
+    #[wasm_bindgen(js_name = laneIndex)]
+    pub lane_index: usize,
+    #[wasm_bindgen(js_name = carsCount)]
     pub cars_count: usize,
+    #[wasm_bindgen(js_name = raysCount)]
     pub rays_count: usize,
-    pub ray_lenght: f64,
+    #[wasm_bindgen(js_name = raysLength)]
+    pub rays_lenght: f64,
     #[wasm_bindgen(skip)]
-    pub neurons_counts: Vec<u32>,
+    pub neurons_counts: Vec<usize>,
+    #[wasm_bindgen(js_name = mutationRate)]
     pub mutation_rate: f64,
 }
 
@@ -66,20 +76,48 @@ impl Config {
     #[wasm_bindgen(constructor)]
     pub fn new(
         lanes_count: usize,
+        lane_index: usize,
         cars_count: usize,
         rays_count: usize,
-        ray_lenght: f64,
+        rays_lenght: f64,
         neurons_count: js_sys::Uint32Array,
         mutation_rate: f64,
     ) -> Self {
-        Self {
+        crate::log!("new config lanes count: {lanes_count}, lane index: {lane_index}, cars count: {cars_count}, rays count: {rays_count}, rays lenght: {rays_lenght}, neurons count: {neurons_count:?}, mutation rate: {mutation_rate}",
+        );
+
+        let x = Self {
             lanes_count,
+            lane_index,
             cars_count,
             rays_count,
-            ray_lenght,
-            neurons_counts: neurons_count.to_vec(),
+            rays_lenght,
+            neurons_counts: neurons_count
+                .to_vec()
+                .into_iter()
+                .map(|x| x as usize)
+                .collect(),
             mutation_rate,
-        }
+        };
+
+        crate::log!("new config: {x:?}");
+        x
+    }
+
+    #[wasm_bindgen(method, getter = neuronsCount)]
+    pub fn neurons_count(&self) -> js_sys::Uint32Array {
+        js_sys::Uint32Array::from(
+            self.neurons_counts
+                .iter()
+                .map(|x| *x as u32)
+                .collect::<Vec<u32>>()
+                .deref(),
+        )
+    }
+
+    #[wasm_bindgen(method, setter = neuronsCount)]
+    pub fn set_neurons_count(&mut self, values: js_sys::Uint32Array) {
+        self.neurons_counts = values.to_vec().into_iter().map(|x| x as usize).collect();
     }
 }
 
@@ -96,11 +134,11 @@ pub struct Simulation {
 #[wasm_bindgen]
 impl Simulation {
     #[wasm_bindgen(constructor)]
-    pub fn new(car_canvas_width: f64, window: &web_sys::Window, config: Config) -> Self {
+    pub fn init(car_canvas_width: f64, window: &web_sys::Window, config: &Config) -> Self {
         let road = road::Road::new(
             car_canvas_width / 2.,
             car_canvas_width * 0.9,
-            LANES_COUNT_DEFAULT,
+            config.lanes_count as i32,
         );
 
         let brain = match window.local_storage() {
@@ -114,13 +152,13 @@ impl Simulation {
             _ => None,
         };
 
-        Simulation {
-            state: SimulationState::Stopped,
-            traffic: Traffic::new(),
-            cars: Car::generate_cars_same(road.lane_center(1), brain, &config),
-            road,
-            config,
-        }
+        let cars = Car::generate_cars_same(
+            road.lane_center(config.lane_index as i32),
+            brain.clone(),
+            &config,
+        );
+
+        Simulation::new(road, cars, Traffic::new(), config.clone())
     }
 
     pub fn run(&mut self) {
@@ -135,6 +173,10 @@ impl Simulation {
         self.state = SimulationState::Stopped;
     }
 
+    pub fn destroy(self) {
+        drop(self);
+    }
+
     pub fn step(
         &mut self,
         car_ctx: CanvasRenderingContext2d,
@@ -142,6 +184,11 @@ impl Simulation {
     ) {
         self.update();
         self.draw(&car_ctx, &network_ctx);
+    }
+
+    #[wasm_bindgen(js_name = updateConfig)]
+    pub fn update_config(&mut self, config: &Config) {
+        self.config = config.clone();
     }
 
     pub fn add_basic_traffic(mut self) -> Self {
@@ -194,6 +241,22 @@ impl Simulation {
 }
 
 impl Simulation {
+    fn new(
+        road: Road,
+        // brain: Option<NeuralNetwork>,
+        cars: Vec<Car>,
+        traffic: Traffic,
+        config: Config,
+    ) -> Self {
+        Simulation {
+            state: SimulationState::Stopped,
+            traffic,
+            cars,
+            road,
+            config,
+        }
+    }
+
     fn update(&mut self) {
         if !matches!(self.state, SimulationState::Running) {
             return;
