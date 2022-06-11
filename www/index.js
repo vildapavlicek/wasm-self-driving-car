@@ -132,14 +132,16 @@ function run() {
     carCanvas.width,
     window,
     getConfigFromForm(document)
-  ).add_basic_traffic();
+  );
+  //.add_basic_traffic();
   simulation.run();
   animate();
   return;
 }
 
 function spawn() {
-  simulation.spawn_car(0);
+  //simulation.spawnCar();
+  simulation.spawnRandom();
 }
 
 function nextAgent() {

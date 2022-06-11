@@ -38,7 +38,7 @@ body {
     border-radius: 10px;
 }
 
-button {
+#verticalButtons button  {
     border: none;
     border-radius: 5px;
     padding: 5px, 5px, 7px, 5px;
@@ -60,7 +60,7 @@ button {
 #settingsForm {
     text-align: center;
     align-items: center;
-    margin: 50px;
+    margin: 25px;
     background-color: #D4C5E2;
     padding: 10px 30px 20px 30px;
     border-radius: 20px;
@@ -105,17 +105,32 @@ button {
     font-size: 22px;
 }
 
-table tr:nth-child(1) {
+#rankings table tr:nth-child(1) {
     font-size: 37px;
     color: gold;
 }
 
-table tr:nth-child(2) {
+#rankings table tr:nth-child(2) {
     font-size: 37px;
     color: silver;
 }
 
-table tr:nth-child(3) {
+#rankings table tr:nth-child(3) {
     font-size: 37px;
     color: orange;
+}
+
+#menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #D4C5E2;
+    border-radius: 10px;
+    padding: 10px 10px 10px 10px;
+}
+
+#menu button {
+    width: 80%;
+
 }

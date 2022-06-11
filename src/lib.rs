@@ -44,6 +44,8 @@ pub const CAR_HEIGHT_DEFAULT: f64 = 50.;
 
 const LOCAL_STORAGE_KEY: &str = "bestBrain";
 
+const IDEAL_DISTANCE: f64 = -250.;
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 struct Save {
     brain: NeuralNetwork,
@@ -59,7 +61,7 @@ pub enum SimulationState {
 }
 
 #[wasm_bindgen]
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Config {
     #[wasm_bindgen(js_name = lanesCount)]
     pub lanes_count: usize,
@@ -169,13 +171,13 @@ impl Simulation {
             config.lanes_count as i32,
         );
 
-        let save = match window.local_storage() {
+        let brain = match window.local_storage() {
             Ok(Some(storage)) => match storage.get_item("bestBrain").ok().flatten() {
                 Some(raw_save) => {
                     log!("found stored brain");
-                    //NeuralNetwork::deserialize_brain(raw_brain)
                     Some(
                         serde_json::from_str::<Save>(raw_save.as_str())
+                            .map(|s| s.brain)
                             .expect("failed to deserialize save data"),
                     )
                 }
@@ -184,18 +186,13 @@ impl Simulation {
             _ => None,
         };
 
-        let (brain, config) = match save {
-            Some(save) => (Some(save.brain), save.config),
-            None => (None, config.clone()),
-        };
-
         let cars = Car::generate_cars_same(
             road.lane_center(config.lane_index as i32),
             brain.clone(),
             &config,
         );
 
-        Simulation::new(road, Agents::new(cars), Traffic::new(), config)
+        Simulation::new(road, Agents::new(cars), Traffic::new(), config.clone())
     }
 
     pub fn run(&mut self) {
@@ -222,9 +219,25 @@ impl Simulation {
         self.agents.focus_previous();
     }
 
+    #[wasm_bindgen(js_name = spawnCar)]
     pub fn spawn_car(&mut self, lane_index: i32) {
         self.traffic.add_car(
             self.road.lane_center(lane_index),
+            self.agents
+                .best_agent()
+                .expect("no best agent, can't resolve Y coordinate")
+                .y
+                - 500.,
+            2.,
+        )
+    }
+
+    #[wasm_bindgen(js_name = spawnRandom)]
+    pub fn spawn_random(&mut self) {
+        self.traffic.add_car(
+            self.road.lane_center(
+                (js_sys::Math::random() * (self.config.lanes_count + 1) as f64).floor() as i32,
+            ),
             self.agents
                 .best_agent()
                 .expect("no best agent, can't resolve Y coordinate")
@@ -284,32 +297,56 @@ impl Simulation {
         // |x| |x|
 
         self.traffic
-            .add(Car::no_control(self.road.lane_center(0), -50., 2.));
+            .add(Car::no_control(self.road.lane_center(0), 0., 2.));
         self.traffic
-            .add(Car::no_control(self.road.lane_center(2), -50., 2.));
+            .add(Car::no_control(self.road.lane_center(2), 0., 2.));
         //
         //self.traffic
         //    .add(Car::no_control(self.road.lane_center(1), -150., 2.));
         //
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(0), -250., 2.));
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(1), -250., 2.));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(0),
+            1_f64 * IDEAL_DISTANCE,
+            2.,
+        ));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(1),
+            1_f64 * IDEAL_DISTANCE,
+            2.,
+        ));
         //
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(1), -400., 2.));
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(2), -400., 2.));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(1),
+            2_f64 * IDEAL_DISTANCE,
+            2.,
+        ));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(2),
+            2_f64 * IDEAL_DISTANCE,
+            2.,
+        ));
         //
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(0), -550., 2.));
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(1), -550., 2.));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(0),
+            3_f64 * IDEAL_DISTANCE,
+            2.,
+        ));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(1),
+            3_f64 * IDEAL_DISTANCE,
+            2.,
+        ));
         //
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(0), -700., 2.));
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(2), -700., 2.));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(0),
+            4_f64 * IDEAL_DISTANCE,
+            2.,
+        ));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(2),
+            4_f64 * IDEAL_DISTANCE,
+            2.,
+        ));
         self
     }
 

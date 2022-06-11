@@ -32,16 +32,16 @@ export function initForm(document, config) {
 
 export function getConfigFromForm(document) {
   return new Config(
-    document.getElementById("lanesCountInput").value,
-    document.getElementById("laneIndexInput").value,
-    document.getElementById("carsCountInput").value,
+    parseInt(document.getElementById("lanesCountInput").value, 10),
+    parseInt(document.getElementById("laneIndexInput").value, 10),
+    parseInt(document.getElementById("carsCountInput").value, 10),
     parseInt(document.getElementById("raysCountInput").value, 10),
-    document.getElementById("raysLengthInput").value,
-    document.getElementById("raysSpread").value,
+    parseInt(document.getElementById("raysLengthInput").value, 10),
+    parseFloat(document.getElementById("raysSpread").value),
     document
       .getElementById("hiddenLayersInput")
       .value.split(",")
       .map((item) => parseInt(item, 10)),
-    document.getElementById("mutationRateInput").value
+    parseFloat(document.getElementById("mutationRateInput").value)
   );
 }
