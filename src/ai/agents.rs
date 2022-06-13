@@ -196,4 +196,9 @@ impl Agents {
         data.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         data.into_iter().take(count).collect()
     }
+
+    pub fn clean(&mut self) {
+        let y = self.best_agent().expect("no best agent").y.abs();
+        self.agents.retain(|c| c.y.abs() > y.abs() - 500.)
+    }
 }

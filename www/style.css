@@ -132,5 +132,12 @@ body {
 
 #menu button {
     width: 80%;
+}
 
+#spawner {
+    text-align: center;
+}
+
+#spawnBtn {
+    margin-top: 2px;
 }

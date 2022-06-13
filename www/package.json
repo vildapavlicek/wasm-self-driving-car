@@ -1,10 +1,10 @@
 {
-  "name": "create-wasm-app",
+  "name": "wasm-self-driving-car",
   "version": "0.1.0",
-  "description": "create an app to consume rust-generated wasm packages",
+  "description": "Implemented a self-driving car using WebAssembly",
   "main": "index.js",
   "bin": {
-    "create-wasm-app": ".bin/create-wasm-app.js"
+    "create-wasm-app": ".bin/wasm-self-driving-car.js"
   },
   "scripts": {
     "build": "webpack --config webpack.config.js",
@@ -12,25 +12,26 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rustwasm/create-wasm-app.git"
+    "url": "git+https://https://github.com/vildapavlicek/wasm-self-driving-car.git"
   },
   "keywords": [
     "webassembly",
     "wasm",
     "rust",
-    "webpack"
+    "webpack",
+    "neural-network",
+    "ai"
   ],
-  "author": "Ashley Williams <ashley666ashley@gmail.com>",
+  "author": "Vilém Pavlíček <vildapavlicek@gmail.com>",
   "license": "(MIT OR Apache-2.0)",
   "bugs": {
-    "url": "https://github.com/rustwasm/create-wasm-app/issues"
+    "url": "https://https://github.com/vildapavlicek/wasm-self-driving-car/issues"
   },
-  "homepage": "https://github.com/rustwasm/create-wasm-app#readme",
+  "homepage": "https://https://github.com/vildapavlicek/wasm-self-driving-car#readme",
   "dependencies": {
     "wasm-self-driving-car": "file:../pkg"
   },
   "devDependencies": {
-    "hello-wasm-pack": "^0.1.0",
     "webpack": "^4.29.3",
     "webpack-cli": "^3.1.0",
     "webpack-dev-server": "^3.1.5",

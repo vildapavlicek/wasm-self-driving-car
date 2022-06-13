@@ -49,6 +49,10 @@ impl Traffic {
             car.draw(ctx, false);
         }
     }
+
+    pub fn clean(&mut self, y: f64) {
+        self.0.retain(|car| car.y.abs() > y.abs() - 500.);
+    }
 }
 
 impl Default for Traffic {

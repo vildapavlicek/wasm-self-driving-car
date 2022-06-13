@@ -13,11 +13,14 @@ let animationFrameId;
 // initialize canvas
 const carCanvas = document.getElementById("carCanvas");
 carCanvas.width = 200;
+carCanvas.height = window.innerHeight;
 const carCtx = carCanvas.getContext("2d");
+
 //
 const networkCanvas = document.getElementById("networkCanvas");
 const networkCtx = networkCanvas.getContext("2d");
-
+networkCanvas.height = window.innerHeight;
+networkCanvas.width = window.innerWidth * 0.4;
 //
 const startPauseBtn = document.getElementById("startPause");
 startPauseBtn.addEventListener("click", startPause);
@@ -34,8 +37,11 @@ discard_btn.addEventListener("click", discard);
 const runBtn = document.getElementById("runBtn");
 runBtn.addEventListener("click", run);
 
-const spawnBtn = document.getElementById("spawnBtn");
-spawnBtn.addEventListener("click", spawn);
+/* const verticalSpawnBtn = document.getElementById("verticalSpawnBtn");
+verticalSpawnBtn.addEventListener("click", spawnVerticalCars); */
+
+const horizontalSpawnBtn = document.getElementById("horizontalSpawnBtn");
+horizontalSpawnBtn.addEventListener("click", spawnHorizontalCars);
 
 const nextAgentBtn = document.getElementById("nextAgentBtn");
 nextAgentBtn.addEventListener("click", nextAgent);
@@ -46,25 +52,39 @@ previousAgentBtn.addEventListener("click", previousAgent);
 const resetFocusBtn = document.getElementById("resetFocusBtn");
 resetFocusBtn.addEventListener("click", resetFocus);
 
+// TESTS SPAWNING
+const easyTestBtn = document.getElementById("easyTestBtn");
+easyTestBtn.addEventListener("click", easyTest);
+
+const mediumTestBtn = document.getElementById("mediumTestBtn");
+mediumTestBtn.addEventListener("click", mediumTest);
+
+const hardTestBtn = document.getElementById("hardTestBtn");
+hardTestBtn.addEventListener("click", hardTest);
+
+const trainingTrafficBtn = document.getElementById("trainingTrafficBtn");
+trainingTrafficBtn.addEventListener("click", trainingTraffic);
+
+trainingTrafficBtn
 
 let simulation;
 let config = Simulation.initConfig(window);
-console.log("init config", config);
 
 initForm(document, config);
 generateTable(document);
 
 const tbody = document.getElementById("rankingsTable");
-tbody.addEventListener('click', function (e) {
-  const cell = e.target.closest('td');
-  if (!cell) {return;} // Quit, not clicked on a cell
+tbody.addEventListener("click", function (e) {
+  const cell = e.target.closest("td");
+  if (!cell) {
+    return;
+  } // Quit, not clicked on a cell
   const row = cell.parentElement;
 
   if (simulation != null) {
     console.log("focusing agent", cell.innerHTML);
-    simulation.focusAgent(parseInt(cell.innerHTML, 10))
+    simulation.focusAgent(parseInt(cell.innerHTML, 10));
   }
-
 });
 
 function animate() {
@@ -74,12 +94,6 @@ function animate() {
   simulation.step(carCtx, networkCtx);
   updateTable(document, simulation.top10Agents());
   animationFrameId = requestAnimationFrame(animate);
-}
-
-function resize() {
-  carCanvas.height = window.innerHeight;
-  networkCanvas.height = window.innerHeight;
-  networkCanvas.width = window.innerWidth * 0.4;
 }
 
 function save() {
@@ -120,7 +134,6 @@ function stop() {
 
   simulation.stop();
   simulation = null;
-  console.log("simulation destroyed", simulation == null);
 }
 
 function run() {
@@ -133,15 +146,29 @@ function run() {
     window,
     getConfigFromForm(document)
   );
-  //.add_basic_traffic();
+  //simulation.addTestTraffic();
   simulation.run();
   animate();
   return;
 }
 
-function spawn() {
-  //simulation.spawnCar();
-  simulation.spawnRandom();
+/* function spawnVerticalCars() {
+  let lane_ids = document
+    .getElementById("verticalSpawnerLaneIdInput")
+    .value.split(",")
+    .map((item) => parseInt(item, 10));
+  console.log("lane id parsed", lane_ids);
+  simulation.spawnCarsVertically(lane_ids);
+}
+ */
+function spawnHorizontalCars() {
+  let lane_ids = document
+    .getElementById("horizontalSpawnerLaneIdInput")
+    .value.split(",")
+    .map((item) => parseInt(item, 10));
+  // let lane_id = parseInt(document.getElementById("spawnLaneIdInput").value, 10);
+  console.log("lane id parsed", lane_ids);
+  simulation.spawnCarsHorizontally(lane_ids);
 }
 
 function nextAgent() {
@@ -155,7 +182,6 @@ function previousAgent() {
 function generateTable(document) {
   let rankingsDiv = document.getElementById("rankings");
   let table = document.createElement("table");
-  // table.classList.add('rankingsTable');
   table.setAttribute("id", "rankingsTable");
 
   for (let i = 0; i < 10; i++) {
@@ -170,12 +196,43 @@ function updateTable(document, rankings) {
   let table = document.getElementById("rankingsTable");
 
   for (let i = 0; i < rankings.length; i++) {
-    table.rows[i].cells[0].innerHTML = i + 1 + '.';
+    table.rows[i].cells[0].innerHTML = i + 1 + ".";
     table.rows[i].cells[1].innerHTML = rankings[i];
   }
 }
 
-
 function resetFocus() {
   simulation.resetFocus();
+}
+
+const EASY = 1;
+const MEDIUM = 0.75;
+const HARD = 0.5;
+
+function easyTest() {
+  if (simulation == null) {
+    return;
+  }
+  simulation.addTestTraffic(EASY);
+}
+
+function mediumTest() {
+  if (simulation == null) {
+    return;
+  }
+  simulation.addTestTraffic(MEDIUM);
+}
+
+function hardTest() {
+  if (simulation == null) {
+    return;
+  }
+  simulation.addTestTraffic(HARD);
+}
+
+function trainingTraffic() {
+  if (simulation == null) {
+    return;
+  }
+  simulation.trainingTraffic();
 }

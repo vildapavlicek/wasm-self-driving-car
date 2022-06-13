@@ -211,7 +211,6 @@ impl Car {
     /// * `brain` - brain to use for each car, first car will have original brain, other brains will be mutated
     /// * `mutation_rate` - mutation rate for each brain expect first one
     pub fn generate_cars_same(x: f64, brain: Option<NeuralNetwork>, config: &Config) -> Vec<Car> {
-        crate::log!("generating cars {}", config.cars_count);
         let mut cars = Vec::with_capacity(config.cars_count);
 
         if brain.is_some() {

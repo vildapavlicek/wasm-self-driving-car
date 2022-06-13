@@ -219,17 +219,47 @@ impl Simulation {
         self.agents.focus_previous();
     }
 
-    #[wasm_bindgen(js_name = spawnCar)]
-    pub fn spawn_car(&mut self, lane_index: i32) {
-        self.traffic.add_car(
-            self.road.lane_center(lane_index),
-            self.agents
-                .best_agent()
-                .expect("no best agent, can't resolve Y coordinate")
-                .y
-                - 500.,
-            2.,
-        )
+    #[wasm_bindgen(js_name = spawnCarsVertically)]
+    pub fn spawn_cars_vertically(&mut self, lane_indexes: Uint32Array) {
+        for (i, lane_index) in lane_indexes.to_vec().into_iter().enumerate() {
+            if !(0..self.config.lanes_count).contains(&(lane_index as usize)) {
+                error!(
+                    "lane index {lane_index} out of range, mix 0, max {}",
+                    self.config.lanes_count
+                );
+                continue;
+            }
+
+            self.traffic.add_car(
+                self.road.lane_center(lane_index as i32),
+                self.agents
+                    .best_agent()
+                    .expect("no best agent, can't resolve Y coordinate")
+                    .y
+                    + (-500. + (i as f64 * IDEAL_DISTANCE)),
+                2.,
+            )
+        }
+    }
+
+    #[wasm_bindgen(js_name = spawnCarsHorizontally)]
+    pub fn spawn_cars_horizontally(&mut self, lane_indexes: Uint32Array) {
+        if lane_indexes.length() > self.config.lanes_count as u32 {
+            error!("number of lanes is bigger than actual lanes count");
+            return;
+        }
+
+        for lane_index in lane_indexes.to_vec().into_iter() {
+            self.traffic.add_car(
+                self.road.lane_center(lane_index as i32),
+                self.agents
+                    .best_agent()
+                    .expect("no best agent, can't resolve Y coordinate")
+                    .y
+                    - 500.,
+                2.,
+            )
+        }
     }
 
     #[wasm_bindgen(js_name = spawnRandom)]
@@ -283,71 +313,287 @@ impl Simulation {
         self.agents.focus_best_agent();
     }
 
-    pub fn add_basic_traffic(mut self) -> Self {
-        // |x| |x|
-        // | | | |
-        // |X|x| |
-        // | | | |
+    #[wasm_bindgen(js_name = addTestTraffic)]
+    pub fn add_basic_traffic(&mut self, distance_ratio: f64) {
         // | |x|x|
         // | | | |
+        // |x| |x|
+        // | | | |
         // |x|x| |
+        // | | | |
+        // |x| |X|
         // | | | |
         // | |x| |
         // | | | |
         // |x| |x|
 
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(0), 0., 2.));
-        self.traffic
-            .add(Car::no_control(self.road.lane_center(2), 0., 2.));
-        //
-        //self.traffic
-        //    .add(Car::no_control(self.road.lane_center(1), -150., 2.));
-        //
+        enum Test {
+            One(i32),
+            Two((i32, i32)),
+        }
+
+        let tests = vec![
+            Test::Two((0, 2)),
+            Test::Two((0, 2)),
+            Test::One(1),
+            Test::Two((0, 2)),
+            Test::Two((0, 1)),
+            Test::Two((0, 2)),
+            Test::Two((1, 2)),
+        ];
+
+        let y = self
+            .agents
+            .best_agent()
+            .expect("no best agent, can't resolve Y coordinate")
+            .y;
+
+        for (index, test) in tests.into_iter().enumerate() {
+            match test {
+                Test::One(lane) => {
+                    self.traffic.add(Car::no_control(
+                        self.road.lane_center(lane),
+                        y + ((index + 1) as f64 * IDEAL_DISTANCE * distance_ratio),
+                        2.,
+                    ));
+                }
+                Test::Two((lane_1, lane_2)) => {
+                    self.traffic.add(Car::no_control(
+                        self.road.lane_center(lane_1),
+                        y + ((index + 1) as f64 * IDEAL_DISTANCE * distance_ratio),
+                        2.,
+                    ));
+                    self.traffic.add(Car::no_control(
+                        self.road.lane_center(lane_2),
+                        y + ((index + 1) as f64 * IDEAL_DISTANCE * distance_ratio),
+                        2.,
+                    ));
+                }
+            }
+        }
+
+        /*
+        // cull all cars that fail to stay in the middle
         self.traffic.add(Car::no_control(
             self.road.lane_center(0),
-            1_f64 * IDEAL_DISTANCE,
-            2.,
-        ));
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(1),
-            1_f64 * IDEAL_DISTANCE,
-            2.,
-        ));
-        //
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(1),
-            2_f64 * IDEAL_DISTANCE,
+            y + (1_f64 * IDEAL_DISTANCE * distance_ratio),
             2.,
         ));
         self.traffic.add(Car::no_control(
             self.road.lane_center(2),
-            2_f64 * IDEAL_DISTANCE,
+            y + (1_f64 * IDEAL_DISTANCE * distance_ratio),
             2.,
         ));
-        //
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(0),
-            3_f64 * IDEAL_DISTANCE,
-            2.,
-        ));
+        // cull each car that fail to avoid `in front of` obstacle
         self.traffic.add(Car::no_control(
             self.road.lane_center(1),
-            3_f64 * IDEAL_DISTANCE,
+            y + (2_f64 * IDEAL_DISTANCE * distance_ratio),
             2.,
         ));
-        //
+        // cull each car, that fails return to middle
         self.traffic.add(Car::no_control(
             self.road.lane_center(0),
-            4_f64 * IDEAL_DISTANCE,
+            y + (3_f64 * IDEAL_DISTANCE * distance_ratio),
             2.,
         ));
         self.traffic.add(Car::no_control(
             self.road.lane_center(2),
-            4_f64 * IDEAL_DISTANCE,
+            y + (3_f64 * IDEAL_DISTANCE * distance_ratio),
             2.,
         ));
-        self
+        // cull cars that turn to the left when it is blocked
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(0),
+            y + (4_f64 * IDEAL_DISTANCE * distance_ratio),
+            2.,
+        ));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(1),
+            y + (4_f64 * IDEAL_DISTANCE * distance_ratio),
+            2.,
+        ));
+        // cull each car, that fails return to middle
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(0),
+            y + (5_f64 * IDEAL_DISTANCE * distance_ratio),
+            2.,
+        ));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(2),
+            y + (5_f64 * IDEAL_DISTANCE * distance_ratio),
+            2.,
+        ));
+        // cull cars that fail to recognize red lane being occupied
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(1),
+            y + (6_f64 * IDEAL_DISTANCE * distance_ratio),
+            2.,
+        ));
+        self.traffic.add(Car::no_control(
+            self.road.lane_center(2),
+            y + (6_f64 * IDEAL_DISTANCE * distance_ratio),
+            2.,
+        )); */
+    }
+
+    #[wasm_bindgen(js_name = trainingTraffic)]
+    pub fn training_traffic(&mut self) {
+        const DISTANCE: f64 = 250.;
+
+        let mut y = self
+            .agents
+            .best_agent()
+            .expect("no best agent, can't resolve Y coordinate")
+            .y
+            .abs();
+
+        y = y + DISTANCE; // best car's Y + IDEAL_DISTANCE offset
+                          /* self.traffic
+                              .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+                          self.traffic
+                              .add(Car::no_control(self.road.lane_center(2), -y, 2.)); */
+        // stay in the center, ie drive straight
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(2), -y, 2.));
+        }
+
+        y = y + DISTANCE / 3.;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(2), -y, 2.));
+        }
+
+        // spread, avoid car in the middle, ie can turn left or right
+        y = y + DISTANCE;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+        }
+
+        y = y + DISTANCE / 3.;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+        }
+
+        // from spreading return to middle
+        y = y + DISTANCE;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(2), -y, 2.));
+        }
+
+        y = y + DISTANCE / 3.;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(2), -y, 2.));
+        }
+
+        // turn to right most lane
+        y = y + DISTANCE;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+        }
+
+        y = y + DISTANCE / 3.;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+        }
+
+        // spread
+        y = y + DISTANCE;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+        }
+
+        y = y + DISTANCE / 3.;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+        }
+
+        // return to middle
+        y = y + DISTANCE;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(2), -y, 2.));
+        }
+
+        y = y + DISTANCE / 3.;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(2), -y, 2.));
+        }
+
+        // turn to left most lane
+        y = y + DISTANCE;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(2), -y, 2.));
+        }
+
+        y = y + DISTANCE / 3.;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(2), -y, 2.));
+        }
+
+        // turn to right most lane
+        y = y + DISTANCE;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+        }
+
+        y = y + DISTANCE / 3.;
+        for _ in 0..3 {
+            y = y + CAR_HEIGHT_DEFAULT + 10.;
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(0), -y, 2.));
+            self.traffic
+                .add(Car::no_control(self.road.lane_center(1), -y, 2.));
+        }
     }
 
     #[wasm_bindgen(js_name = saveFocusedCar)]
@@ -420,7 +666,13 @@ impl Simulation {
 
         // update traffic
         self.traffic.update(&self.road);
-        self.agents.update(&self.road, &self.traffic)
+        self.agents.update(&self.road, &self.traffic);
+
+        let y = self.agents.best_agent().expect("no best agent").y;
+
+        // remove cars that are too far behing the agent
+        self.traffic.clean(y);
+        self.agents.clean();
     }
 
     fn draw(&mut self, car_ctx: &CanvasRenderingContext2d, network_ctx: &CanvasRenderingContext2d) {
