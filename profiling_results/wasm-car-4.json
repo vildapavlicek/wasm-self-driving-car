@@ -1,0 +1,53 @@
+{
+  "title": "wasm-car-4",
+  "steps": [
+    {
+      "type": "setViewport",
+      "width": 1819,
+      "height": 569,
+      "deviceScaleFactor": 1,
+      "isMobile": false,
+      "hasTouch": false,
+      "isLandscape": false
+    },
+    {
+      "type": "navigate",
+      "url": "http://localhost:8080/",
+      "assertedEvents": [
+        {
+          "type": "navigation",
+          "url": "http://localhost:8080/",
+          "title": "Self-driving car. WASM + RUST"
+        }
+      ]
+    },
+    {
+      "type": "click",
+      "selectors": [
+        [
+          "aria/Run"
+        ],
+        [
+          "#runBtn"
+        ]
+      ],
+      "target": "main",
+      "offsetX": 114.8125,
+      "offsetY": 7.5
+    },
+    {
+      "type": "click",
+      "selectors": [
+        [
+          "aria/Easy Test"
+        ],
+        [
+          "#easyTestBtn"
+        ]
+      ],
+      "target": "main",
+      "offsetX": 120.8125,
+      "offsetY": 11.5
+    }
+  ]
+}

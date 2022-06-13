@@ -65,10 +65,10 @@ fn draw_level(
     let bottom = top + height;
 
     for (i, _) in level.inputs.iter().enumerate() {
-        for (j, _) in level.outputs.iter().enumerate() {
+        for (j, _) in level.outputs.borrow().iter().enumerate() {
             ctx.begin_path();
             ctx.move_to(get_node(level.inputs.len(), i, right), bottom);
-            ctx.line_to(get_node(level.outputs.len(), j, right), top);
+            ctx.line_to(get_node(level.outputs.borrow().len(), j, right), top);
 
             ctx.set_line_width(2.);
             ctx.set_stroke_style(&crate::utils::get_rgba(level.weights[i][j]));
@@ -90,8 +90,8 @@ fn draw_level(
         ctx.fill();
     }
 
-    for (i, output) in level.outputs.iter().enumerate() {
-        let x = get_node(level.outputs.len(), i, right);
+    for (i, output) in level.outputs.borrow().iter().enumerate() {
+        let x = get_node(level.outputs.borrow().len(), i, right);
         ctx.begin_path();
         ctx.arc(x, top, NODE_RADIUS, 0., 2. * std::f64::consts::PI)
             .expect("failed to `arc`");

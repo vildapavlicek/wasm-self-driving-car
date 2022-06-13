@@ -2,6 +2,7 @@ pub mod agents;
 
 use itertools::Itertools;
 use js_sys::Math::random;
+use std::cell::RefCell;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::utils::lerp;
@@ -20,18 +21,38 @@ impl NeuralNetwork {
         Self(levels)
     }
 
-    pub fn feed_forward(&mut self, inputs: Vec<f64>) -> Vec<f64> {
+    /* pub fn feed_forward(&mut self, inputs: Vec<f64>) -> Vec<f64> {
         let mut outputs = self
             .0
             .first_mut()
             .expect("no neural network provided")
-            .feed_forward(&inputs);
+            .feed_forward(inputs);
 
         for level in self.0.iter_mut().skip(1) {
-            outputs = level.feed_forward(&outputs);
+            outputs = level.feed_forward(outputs);
         }
 
         outputs
+    } */
+
+    pub fn feed_forward_2(&self, inputs: Vec<f64>) {
+        let first_level = self.0.first().expect("neural network missing input layer");
+
+        feed_forward(
+            &RefCell::new(inputs),
+            &first_level.outputs,
+            &first_level.weights,
+            &first_level.biases,
+        );
+
+        for (index, level) in self.0.iter().skip(1).enumerate() {
+            feed_forward(
+                &self.0[index].outputs,
+                &level.outputs,
+                &level.weights,
+                &level.biases,
+            )
+        }
     }
 }
 
@@ -66,7 +87,7 @@ impl NeuralNetwork {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Level {
     pub inputs: Vec<f64>,
-    pub outputs: Vec<f64>,
+    pub outputs: RefCell<Vec<f64>>,
     pub biases: Vec<f64>,
     pub weights: Vec<Vec<f64>>,
 }
@@ -75,7 +96,7 @@ impl Level {
     pub fn new(input_count: usize, output_count: usize) -> Self {
         Level {
             inputs: vec![0.; input_count],
-            outputs: vec![0.; output_count],
+            outputs: RefCell::new(vec![0.; output_count]),
             biases: vec![],
             weights: vec![],
         }
@@ -89,49 +110,55 @@ impl Level {
         for _ in self.inputs.iter() {
             let mut weights = vec![];
             // we have one weight value for each output, from 1 input we map weights to each output
-            for _ in self.outputs.iter() {
+            for _ in self.outputs.borrow().iter() {
                 weights.push(random() * 2.0 - 1.0);
             }
             self.weights.push(weights);
         }
 
-        for _ in 0..self.outputs.len() {
+        for _ in 0..self.outputs.borrow().len() {
             self.biases.push(random() * 2.0 - 1.0);
         }
 
         self
     }
 
-    pub fn feed_forward(&mut self, inputs: &[f64]) -> Vec<f64> {
-        self.inputs
-            .iter_mut()
-            .zip(inputs.iter())
-            .for_each(|(old_input, new_input)| *old_input = *new_input);
+    /* pub fn feed_forward(&mut self, inputs: Vec<f64>) -> Vec<f64> {
+        self.inputs = inputs;
 
-        for (i, output) in self.outputs.iter_mut().enumerate() {
+        for (i, output) in self.outputs.borrow_mut().iter_mut().enumerate() {
             let mut sum = 0.;
-            for (j, _) in self.inputs.iter().enumerate() {
-                sum += self
-                    .inputs
-                    .get(j)
-                    .expect("expected input value, but none was found")
-                    * self
-                        .weights
-                        .get(j)
-                        .and_then(|w| w.get(i).copied())
-                        .expect("expected weights value but none was found");
+            for (j, input) in self.inputs.iter().enumerate() {
+                sum += input * self.weights[j][i]
             }
 
             *output = match self.biases.get(i) {
-                //Some(bias) => (sum + bias).clamp(-1., 1.),
                 Some(b) if sum + *b > 0. => 1.,
                 Some(b) if sum < *b => 0.,
-                /* Some(b) if sum > *b => 1.,
-                Some(b) if sum < *b => 0., */
                 _ => 0.,
             }
         }
 
-        self.outputs.clone()
+        self.outputs.borrow().clone()
+    } */
+}
+
+pub fn feed_forward(
+    inputs: &RefCell<Vec<f64>>,
+    outputs: &RefCell<Vec<f64>>,
+    weights: &[Vec<f64>],
+    biases: &[f64],
+) {
+    for (i, output) in outputs.borrow_mut().iter_mut().enumerate() {
+        let mut sum = 0.;
+        for (j, input) in inputs.borrow().iter().enumerate() {
+            sum += input * weights[j][i]
+        }
+
+        *output = match biases.get(i) {
+            Some(b) if sum + *b > 0. => 1.,
+            Some(b) if sum < *b => 0.,
+            _ => 0.,
+        }
     }
 }

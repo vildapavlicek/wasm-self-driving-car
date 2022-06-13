@@ -1,0 +1,102 @@
+{
+  "title": "wasm-car-3",
+  "steps": [
+    {
+      "type": "setViewport",
+      "width": 2560,
+      "height": 757,
+      "deviceScaleFactor": 1,
+      "isMobile": false,
+      "hasTouch": false,
+      "isLandscape": false
+    },
+    {
+      "type": "navigate",
+      "url": "http://localhost:8080/",
+      "assertedEvents": [
+        {
+          "type": "navigation",
+          "url": "http://localhost:8080/",
+          "title": "Self-driving car. WASM + RUST"
+        }
+      ]
+    },
+    {
+      "type": "click",
+      "selectors": [
+        [
+          "aria/Run"
+        ],
+        [
+          "#runBtn"
+        ]
+      ],
+      "target": "main",
+      "offsetX": 91.875,
+      "offsetY": 12.5
+    },
+    {
+      "type": "click",
+      "selectors": [
+        [
+          "#leftSection"
+        ]
+      ],
+      "target": "main",
+      "offsetX": 311.40625,
+      "offsetY": 169.9375
+    },
+    {
+      "type": "change",
+      "value": "20",
+      "selectors": [
+        [
+          "#carsCountInput"
+        ]
+      ],
+      "target": "main"
+    },
+    {
+      "type": "click",
+      "selectors": [
+        [
+          "aria/Run"
+        ],
+        [
+          "#runBtn"
+        ]
+      ],
+      "target": "main",
+      "offsetX": 86.875,
+      "offsetY": 7.5
+    },
+    {
+      "type": "click",
+      "selectors": [
+        [
+          "aria/Easy Test"
+        ],
+        [
+          "#easyTestBtn"
+        ]
+      ],
+      "target": "main",
+      "offsetX": 97.875,
+      "offsetY": 7.5
+    },
+    {
+      "type": "click",
+      "selectors": [
+        [
+          "aria/🛑"
+        ],
+        [
+          "#stop"
+        ]
+      ],
+      "target": "main",
+      "offsetX": 31.40625,
+      "offsetY": 26
+    }
+  ]
+}

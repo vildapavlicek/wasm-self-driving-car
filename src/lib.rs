@@ -447,12 +447,8 @@ impl Simulation {
             .y
             .abs();
 
-        y = y + DISTANCE; // best car's Y + IDEAL_DISTANCE offset
-                          /* self.traffic
-                              .add(Car::no_control(self.road.lane_center(0), -y, 2.));
-                          self.traffic
-                              .add(Car::no_control(self.road.lane_center(2), -y, 2.)); */
-        // stay in the center, ie drive straight
+        y = y + DISTANCE;
+
         for _ in 0..3 {
             y = y + CAR_HEIGHT_DEFAULT + 10.;
             self.traffic

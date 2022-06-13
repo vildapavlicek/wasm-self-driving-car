@@ -99,7 +99,9 @@ impl Car {
 
     pub fn update(&mut self, road: &Road, traffic: &Traffic) {
         match self.damaged {
-            true => (),
+            true => {
+                return;
+            }
             _ => {
                 self.move_car();
 
@@ -116,7 +118,13 @@ impl Car {
                             .map(|x| x.map(|i| 1. - i.offset).unwrap_or_default())
                             .collect::<Vec<f64>>();
 
-                        let outputs = brain.feed_forward(offsets);
+                        brain.feed_forward_2(offsets);
+                        let outputs = brain
+                            .0
+                            .last()
+                            .expect("missing ouput layer")
+                            .outputs
+                            .borrow();
 
                         self.controls.up = outputs[0] == 1.;
                         self.controls.left = outputs[1] == 1.;
