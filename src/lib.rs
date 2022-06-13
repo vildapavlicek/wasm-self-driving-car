@@ -371,69 +371,6 @@ impl Simulation {
                 }
             }
         }
-
-        /*
-        // cull all cars that fail to stay in the middle
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(0),
-            y + (1_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(2),
-            y + (1_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        // cull each car that fail to avoid `in front of` obstacle
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(1),
-            y + (2_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        // cull each car, that fails return to middle
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(0),
-            y + (3_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(2),
-            y + (3_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        // cull cars that turn to the left when it is blocked
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(0),
-            y + (4_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(1),
-            y + (4_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        // cull each car, that fails return to middle
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(0),
-            y + (5_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(2),
-            y + (5_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        // cull cars that fail to recognize red lane being occupied
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(1),
-            y + (6_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        ));
-        self.traffic.add(Car::no_control(
-            self.road.lane_center(2),
-            y + (6_f64 * IDEAL_DISTANCE * distance_ratio),
-            2.,
-        )); */
     }
 
     #[wasm_bindgen(js_name = trainingTraffic)]
@@ -676,10 +613,13 @@ impl Simulation {
             return;
         }
 
-        let focused_agent = self
-            .agents
-            .focused_agent()
-            .expect("no focused agent, no agent to follow");
+        let focused_agent = match self.agents.focused_agent() {
+            Some(fa) => fa,
+            None => {
+                error!("didn't find any focused agent. Agents\n {:#?}", self.agents);
+                return;
+            }
+        };
 
         // draw best cars neural network
         network_ctx.set_line_dash_offset(focused_agent.y / 5.);

@@ -79,59 +79,49 @@ impl Car {
         self.brain = brain;
     }
 
-    pub fn serialize_brain(&self) -> String {
-        serde_json::to_string(&self.brain).expect("failed to serialize brain")
-    }
-
-    pub fn deserialize_brain(&mut self, json: String) {
-        self.brain = serde_json::from_str::<NeuralNetwork>(&json).ok();
-    }
-
-    pub fn handle_key_input(&mut self, event: KeyEvent) {
-        if let ControlType::Keyboard = self.controls.control_type {
-            self.controls.handle_key_input(event);
-        }
-    }
+    /*     pub fn handle_key_input(&mut self, event: KeyEvent) {
+           if let ControlType::Keyboard = self.controls.control_type {
+               self.controls.handle_key_input(event);
+           }
+       }
+    */
 
     pub fn mutate(&mut self, mutation: f64) {
         self.brain = self.brain.take().map(|brain| brain.mutate(mutation));
     }
 
     pub fn update(&mut self, road: &Road, traffic: &Traffic) {
-        match self.damaged {
-            true => {
-                return;
-            }
-            _ => {
-                self.move_car();
+        if self.damaged {
+            return;
+        }
 
-                self.create_polygon();
-                self.damaged = self.resolve_damage(road, traffic);
+        self.move_car();
 
-                if let Some(sensor) = self.sensor.as_mut() {
-                    sensor.update(self.x, self.y, self.angle, road.boarders(), traffic);
+        self.create_polygon();
+        self.damaged = self.resolve_damage(road, traffic);
 
-                    if let Some(brain) = self.brain.as_mut() {
-                        let offsets = sensor
-                            .readings()
-                            .iter()
-                            .map(|x| x.map(|i| 1. - i.offset).unwrap_or_default())
-                            .collect::<Vec<f64>>();
+        if let Some(sensor) = self.sensor.as_mut() {
+            sensor.update(self.x, self.y, self.angle, road.boarders(), traffic);
 
-                        brain.feed_forward_2(offsets);
-                        let outputs = brain
-                            .0
-                            .last()
-                            .expect("missing ouput layer")
-                            .outputs
-                            .borrow();
+            if let Some(brain) = self.brain.as_mut() {
+                let offsets = sensor
+                    .readings()
+                    .iter()
+                    .map(|x| x.map(|i| 1. - i.offset).unwrap_or_default())
+                    .collect::<Vec<f64>>();
 
-                        self.controls.up = outputs[0] == 1.;
-                        self.controls.left = outputs[1] == 1.;
-                        self.controls.right = outputs[2] == 1.;
-                        self.controls.down = outputs[3] == 1.;
-                    }
-                }
+                brain.feed_forward_2(offsets);
+                let outputs = brain
+                    .0
+                    .last()
+                    .expect("missing ouput layer")
+                    .outputs
+                    .borrow();
+
+                self.controls.up = outputs[0] == 1.;
+                self.controls.left = outputs[1] == 1.;
+                self.controls.right = outputs[2] == 1.;
+                self.controls.down = outputs[3] == 1.;
             }
         }
     }
