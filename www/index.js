@@ -65,7 +65,7 @@ hardTestBtn.addEventListener("click", hardTest);
 const trainingTrafficBtn = document.getElementById("trainingTrafficBtn");
 trainingTrafficBtn.addEventListener("click", trainingTraffic);
 
-trainingTrafficBtn
+trainingTrafficBtn;
 
 let simulation;
 let config = Simulation.initConfig(window);
@@ -91,8 +91,11 @@ function animate() {
   carCanvas.height = window.innerHeight;
   networkCanvas.height = window.innerHeight;
   networkCanvas.width = window.innerWidth * 0.4;
-  simulation.step(carCtx, networkCtx);
+
+  simulation.step(carCtx, networkCtx, carCanvas.height);
+
   updateTable(document, simulation.top10Agents());
+
   animationFrameId = requestAnimationFrame(animate);
 }
 
@@ -104,7 +107,7 @@ function save() {
 
 function discard() {
   console.log("discarding brain");
-  simulation.discard_brain(window);
+  Simulation.discard_brain(window);
 }
 
 function startPause() {

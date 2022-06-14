@@ -11,7 +11,26 @@ pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-pub type Boarders = [((f64, f64), (f64, f64))];
+use web_sys::console;
+
+pub struct Timer<'a> {
+    name: &'a str,
+}
+
+impl<'a> Timer<'a> {
+    pub fn new(name: &'a str) -> Timer<'a> {
+        console::time_with_label(name);
+        Timer { name }
+    }
+}
+
+impl<'a> Drop for Timer<'a> {
+    fn drop(&mut self) {
+        console::time_end_with_label(self.name);
+    }
+}
+
+pub type Borders = [((f64, f64), (f64, f64))];
 
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn lerp(a: f64, b: f64, t: f64) -> f64 {
@@ -54,7 +73,7 @@ pub fn get_intersection(
     }
 }
 
-pub fn poly_intersection_with_borders(poly1: &[(f64, f64)], borders: &Boarders) -> bool {
+pub fn poly_intersection_with_borders(poly1: &[(f64, f64)], borders: &Borders) -> bool {
     for (polygon_1, polygon_2) in poly1.iter().circular_tuple_windows() {
         for border in borders {
             if get_intersection(*polygon_1, *polygon_2, border.0, border.1).is_some() {

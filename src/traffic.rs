@@ -38,14 +38,25 @@ impl Traffic {
         self.0.push(Car::no_control(x, y, max_speed))
     }
 
-    pub fn update(&mut self, road: &Road) {
+    pub fn update(&mut self) {
         for car in &mut self.0 {
-            car.update(road, &Traffic::new());
+            car.update_dummy_car();
         }
     }
 
-    pub fn draw(&mut self, ctx: &CanvasRenderingContext2d) {
+    pub fn draw(
+        &mut self,
+        ctx: &CanvasRenderingContext2d,
+        car_rendering_distance: f64,
+        focused_agent_y: f64,
+    ) {
         for car in &mut self.0 {
+            // we take focused agent's y subtract it from car's y, this should give us the distance between those two
+            // and if the distance is bigger than rendering distance, it means that car should be outside of visible canvas
+            // so we shouldn't have a need to render it
+            if (focused_agent_y.abs() - car.y.abs()).abs() > car_rendering_distance {
+                continue;
+            }
             car.draw(ctx, false);
         }
     }

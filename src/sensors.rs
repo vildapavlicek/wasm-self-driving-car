@@ -1,6 +1,6 @@
 use crate::{
     traffic::Traffic,
-    utils::{get_intersection, Boarders, IntersectionPoint},
+    utils::{get_intersection, Borders, IntersectionPoint},
 };
 use itertools::Itertools;
 use std::ops::Neg;
@@ -65,14 +65,14 @@ impl Sensor {
         x: f64,
         y: f64,
         angle: f64,
-        road_borders: &Boarders,
+        road_borders: &Borders,
         traffic: &Traffic,
     ) {
         self.cast_rays(x, y, angle);
         self.rays
             .iter()
             .zip(self.readings.iter_mut())
-            .for_each(|(ray, reading)| *reading = get_reading(*ray, road_borders, traffic));
+            .for_each(|(ray, reading)| *reading = get_reading(y, *ray, road_borders, traffic));
     }
 
     pub fn draw(&self, ctx: &CanvasRenderingContext2d) {
@@ -106,32 +106,52 @@ impl Sensor {
 }
 
 fn get_reading(
+    reader_y: f64,
     (ray_start, ray_end): ((f64, f64), (f64, f64)),
-    road_borders: &Boarders,
+    road_borders: &Borders,
     traffic: &Traffic,
 ) -> Option<IntersectionPoint> {
-    let mut contacts = vec![];
+    let mut min_contact: Option<IntersectionPoint> = None;
+
+    // let mut contacts = vec![];
     road_borders.iter().for_each(|(border_start, border_end)| {
         if let Some(intersection) = get_intersection(ray_start, ray_end, *border_start, *border_end)
         {
-            contacts.push(intersection);
+            match min_contact {
+                Some(cp) if cp.offset > intersection.offset => min_contact = Some(intersection),
+                None => min_contact = Some(intersection),
+                _ => (),
+            }
         }
     });
 
     for car in traffic.0.iter() {
+        // let's skip cars that are out of sensor's range
+        if (reader_y.abs() - car.y.abs()).abs() > 200. {
+            continue;
+        }
         let poly = car.polygons();
         for (poly_w_1, poly_w_2) in poly.iter().circular_tuple_windows() {
             if let Some(intersection) = get_intersection(ray_start, ray_end, *poly_w_1, *poly_w_2) {
-                contacts.push(intersection);
+                {
+                    match min_contact {
+                        Some(cp) if cp.offset > intersection.offset => {
+                            min_contact = Some(intersection)
+                        }
+                        None => min_contact = Some(intersection),
+                        _ => (),
+                    }
+                }
             }
         }
     }
 
-    if contacts.is_empty() {
+    min_contact
+    /* if contacts.is_empty() {
         return None;
     }
 
     contacts
         .into_iter()
-        .min_by(|x, y| x.offset.partial_cmp(&y.offset).unwrap())
+        .min_by(|x, y| x.offset.partial_cmp(&y.offset).unwrap()) */
 }
