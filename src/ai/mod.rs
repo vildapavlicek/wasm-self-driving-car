@@ -21,20 +21,6 @@ impl NeuralNetwork {
         Self(levels)
     }
 
-    /* pub fn feed_forward(&mut self, inputs: Vec<f64>) -> Vec<f64> {
-        let mut outputs = self
-            .0
-            .first_mut()
-            .expect("no neural network provided")
-            .feed_forward(inputs);
-
-        for level in self.0.iter_mut().skip(1) {
-            outputs = level.feed_forward(outputs);
-        }
-
-        outputs
-    } */
-
     pub fn feed_forward_2(&self, inputs: Vec<f64>) {
         let first_level = self.0.first().expect("neural network missing input layer");
 
@@ -122,25 +108,6 @@ impl Level {
 
         self
     }
-
-    /* pub fn feed_forward(&mut self, inputs: Vec<f64>) -> Vec<f64> {
-        self.inputs = inputs;
-
-        for (i, output) in self.outputs.borrow_mut().iter_mut().enumerate() {
-            let mut sum = 0.;
-            for (j, input) in self.inputs.iter().enumerate() {
-                sum += input * self.weights[j][i]
-            }
-
-            *output = match self.biases.get(i) {
-                Some(b) if sum + *b > 0. => 1.,
-                Some(b) if sum < *b => 0.,
-                _ => 0.,
-            }
-        }
-
-        self.outputs.borrow().clone()
-    } */
 }
 
 pub fn feed_forward(

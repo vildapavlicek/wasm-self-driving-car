@@ -7,15 +7,16 @@ use std::ops::Neg;
 use wasm_bindgen::prelude::*;
 use web_sys::CanvasRenderingContext2d;
 
+type StartXY = (f64, f64);
+type EndXY = (f64, f64);
+
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Sensor {
     ray_count: i32,
     ray_length: f64,
     ray_spread: f64,
-    //#[wasm_bindgen(skip)]
-    /// [((start_x, start_y), (end_x, end_y))]
-    rays: Vec<((f64, f64), (f64, f64))>,
+    rays: Vec<(StartXY, EndXY)>,
     readings: Vec<Option<IntersectionPoint>>,
 }
 
@@ -147,11 +148,4 @@ fn get_reading(
     }
 
     min_contact
-    /* if contacts.is_empty() {
-        return None;
-    }
-
-    contacts
-        .into_iter()
-        .min_by(|x, y| x.offset.partial_cmp(&y.offset).unwrap()) */
 }
