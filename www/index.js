@@ -92,17 +92,7 @@ function animate() {
   networkCanvas.height = window.innerHeight;
   networkCanvas.width = window.innerWidth * 0.4;
 
-
-  simulation.step(carCtx, networkCtx);
-
-  const y = simulation.getFocusedAgentY();
-  console.log("focused agent y", y);
-  console.log("canvas height", carCanvas.height, "canvas width", carCanvas.width);
-  carCtx.strokeStyle = "black";
-  carCtx.beginPath();
-  carCtx.moveTo(carCanvas.width / 2 - 10, carCanvas.height / 2 - 10);
-  carCtx.lineTo(carCanvas.width / 2 + 10,  carCanvas.height / 2 - 10);
-  carCtx.stroke();
+  simulation.step(carCtx, networkCtx, carCanvas.height);
 
   updateTable(document, simulation.top10Agents());
 
@@ -117,7 +107,7 @@ function save() {
 
 function discard() {
   console.log("discarding brain");
-  simulation.discard_brain(window);
+  Simulation.discard_brain(window);
 }
 
 function startPause() {

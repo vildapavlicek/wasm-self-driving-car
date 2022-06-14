@@ -281,9 +281,10 @@ impl Simulation {
         &mut self,
         car_ctx: CanvasRenderingContext2d,
         network_ctx: CanvasRenderingContext2d,
+        car_rendering_distance: f64,
     ) {
         self.update();
-        self.draw(&car_ctx, &network_ctx);
+        self.draw(&car_ctx, &network_ctx, car_rendering_distance);
     }
 
     #[wasm_bindgen(js_name = updateConfig)]
@@ -616,7 +617,12 @@ impl Simulation {
         // remove cars that are too far behing the agent
     }
 
-    fn draw(&mut self, car_ctx: &CanvasRenderingContext2d, network_ctx: &CanvasRenderingContext2d) {
+    fn draw(
+        &mut self,
+        car_ctx: &CanvasRenderingContext2d,
+        network_ctx: &CanvasRenderingContext2d,
+        car_rendering_distance: f64,
+    ) {
         if matches!(self.state, SimulationState::Stopped) {
             return;
         }
@@ -648,7 +654,8 @@ impl Simulation {
             )
             .expect("failed to translate on saved context");
         self.road.draw(car_ctx);
-        self.traffic.draw(car_ctx);
+        self.traffic
+            .draw(car_ctx, car_rendering_distance, focused_agent.y);
 
         self.agents.draw(car_ctx);
 

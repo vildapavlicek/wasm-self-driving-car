@@ -44,8 +44,19 @@ impl Traffic {
         }
     }
 
-    pub fn draw(&mut self, ctx: &CanvasRenderingContext2d) {
+    pub fn draw(
+        &mut self,
+        ctx: &CanvasRenderingContext2d,
+        car_rendering_distance: f64,
+        focused_agent_y: f64,
+    ) {
         for car in &mut self.0 {
+            // we take focused agent's y subtract it from car's y, this should give us the distance between those two
+            // and if the distance is bigger than rendering distance, it means that car should be outside of visible canvas
+            // so we shouldn't have a need to render it
+            if (focused_agent_y.abs() - car.y.abs()).abs() > car_rendering_distance {
+                continue;
+            }
             car.draw(ctx, false);
         }
     }

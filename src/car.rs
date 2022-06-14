@@ -317,9 +317,12 @@ impl Car {
             return true;
         };
 
-        traffic
-            .0
-            .iter()
-            .any(|car| crate::utils::poly_intersection_with_poly(self.polygons(), car.polygons()))
+        traffic.0.iter().any(|car| {
+            match (self.y.abs() - car.y.abs()).abs() > 200. {
+                // if car not in range, no damage can be done
+                true => false,
+                false => crate::utils::poly_intersection_with_poly(self.polygons(), car.polygons()),
+            }
+        })
     }
 }
