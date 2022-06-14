@@ -603,9 +603,8 @@ impl Simulation {
             return;
         }
 
-        match self.agents.best_agent() {
-            Some(a) => self.traffic.clean(a.y),
-            _ => (),
+        if let Some(a) = self.agents.best_agent() {
+            self.traffic.clean(a.y)
         };
 
         self.agents.clean();
