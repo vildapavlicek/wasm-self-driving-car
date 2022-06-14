@@ -1,4 +1,4 @@
-use crate::utils::Boarders;
+use crate::utils::Borders;
 use js_sys::Array;
 use std::ops::{Deref, Neg};
 use wasm_bindgen::prelude::*;
@@ -113,7 +113,7 @@ impl Road {
 }
 
 impl Road {
-    pub fn boarders(&self) -> &Boarders {
+    pub fn boarders(&self) -> &Borders {
         self.borders.deref()
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
     ai::NeuralNetwork,
-    controls::{ControlType, Controls, KeyEvent},
+    controls::{ControlType, Controls},
     road::Road,
     sensors::Sensor,
     traffic::Traffic,
@@ -126,6 +126,11 @@ impl Car {
         }
     }
 
+    pub fn update_dummy_car(&mut self) {
+        self.move_car();
+        self.create_polygon();
+    }
+
     pub fn draw(&self, ctx: &CanvasRenderingContext2d, draw_sensor: bool) {
         match (self.damaged, self.controls.control_type) {
             (true, _) => ctx.set_fill_style(&JsValue::from_str("gray")),
@@ -209,13 +214,15 @@ impl Car {
     /// * `brain` - brain to use for each car, first car will have original brain, other brains will be mutated
     /// * `mutation_rate` - mutation rate for each brain expect first one
     pub fn generate_cars_same(x: f64, brain: Option<NeuralNetwork>, config: &Config) -> Vec<Car> {
+        let mut cars_count = config.cars_count;
         let mut cars = Vec::with_capacity(config.cars_count);
 
         if brain.is_some() {
             cars.push(Car::ai_default(config.cars_count, x, brain.clone(), config));
+            cars_count -= 1;
         }
 
-        (0..config.cars_count - 1).for_each(|n| {
+        (0..cars_count).for_each(|n| {
             cars.push(Car::ai_default(
                 n,
                 x,

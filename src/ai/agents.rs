@@ -198,7 +198,7 @@ impl Agents {
     }
 
     pub fn clean(&mut self) {
-        let y = self.best_agent().expect("no best agent").y.abs();
+        let y = self.best_agent().map(|a| a.y.abs()).unwrap_or_default();
         self.agents.retain(|c| c.y.abs() > y.abs() - 500.)
     }
 }

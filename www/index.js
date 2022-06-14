@@ -65,7 +65,7 @@ hardTestBtn.addEventListener("click", hardTest);
 const trainingTrafficBtn = document.getElementById("trainingTrafficBtn");
 trainingTrafficBtn.addEventListener("click", trainingTraffic);
 
-trainingTrafficBtn
+trainingTrafficBtn;
 
 let simulation;
 let config = Simulation.initConfig(window);
@@ -91,8 +91,21 @@ function animate() {
   carCanvas.height = window.innerHeight;
   networkCanvas.height = window.innerHeight;
   networkCanvas.width = window.innerWidth * 0.4;
+
+
   simulation.step(carCtx, networkCtx);
+
+  const y = simulation.getFocusedAgentY();
+  console.log("focused agent y", y);
+  console.log("canvas height", carCanvas.height, "canvas width", carCanvas.width);
+  carCtx.strokeStyle = "black";
+  carCtx.beginPath();
+  carCtx.moveTo(carCanvas.width / 2 - 10, carCanvas.height / 2 - 10);
+  carCtx.lineTo(carCanvas.width / 2 + 10,  carCanvas.height / 2 - 10);
+  carCtx.stroke();
+
   updateTable(document, simulation.top10Agents());
+
   animationFrameId = requestAnimationFrame(animate);
 }
 

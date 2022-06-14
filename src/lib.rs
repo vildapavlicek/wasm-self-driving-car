@@ -553,7 +553,7 @@ impl Simulation {
             .expect("failed to save brain to local storage");
     }
 
-    pub fn discard_brain(&self, window: &web_sys::Window) {
+    pub fn discard_brain(window: &web_sys::Window) {
         window
             .local_storage()
             .ok()
@@ -579,6 +579,11 @@ impl Simulation {
             None => Config::default(),
         }
     }
+
+    #[wasm_bindgen(js_name = getFocusedAgentY)]
+    pub fn focus_agent_y(&self) -> f64 {
+        self.agents.best_agent().map(|c| c.y).unwrap_or_default()
+    }
 }
 
 impl Simulation {
@@ -597,15 +602,18 @@ impl Simulation {
             return;
         }
 
+        match self.agents.best_agent() {
+            Some(a) => self.traffic.clean(a.y),
+            _ => (),
+        };
+
+        self.agents.clean();
+
         // update traffic
-        self.traffic.update(&self.road);
+        self.traffic.update();
         self.agents.update(&self.road, &self.traffic);
 
-        let y = self.agents.best_agent().expect("no best agent").y;
-
         // remove cars that are too far behing the agent
-        self.traffic.clean(y);
-        self.agents.clean();
     }
 
     fn draw(&mut self, car_ctx: &CanvasRenderingContext2d, network_ctx: &CanvasRenderingContext2d) {

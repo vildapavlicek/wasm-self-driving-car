@@ -1,6 +1,6 @@
 use crate::{
     traffic::Traffic,
-    utils::{get_intersection, Boarders, IntersectionPoint},
+    utils::{get_intersection, Borders, IntersectionPoint},
 };
 use itertools::Itertools;
 use std::ops::Neg;
@@ -65,7 +65,7 @@ impl Sensor {
         x: f64,
         y: f64,
         angle: f64,
-        road_borders: &Boarders,
+        road_borders: &Borders,
         traffic: &Traffic,
     ) {
         self.cast_rays(x, y, angle);
@@ -107,7 +107,7 @@ impl Sensor {
 
 fn get_reading(
     (ray_start, ray_end): ((f64, f64), (f64, f64)),
-    road_borders: &Boarders,
+    road_borders: &Borders,
     traffic: &Traffic,
 ) -> Option<IntersectionPoint> {
     let mut contacts = vec![];

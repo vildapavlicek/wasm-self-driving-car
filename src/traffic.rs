@@ -38,9 +38,9 @@ impl Traffic {
         self.0.push(Car::no_control(x, y, max_speed))
     }
 
-    pub fn update(&mut self, road: &Road) {
+    pub fn update(&mut self) {
         for car in &mut self.0 {
-            car.update(road, &Traffic::new());
+            car.update_dummy_car();
         }
     }
 
