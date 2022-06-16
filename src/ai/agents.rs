@@ -4,6 +4,7 @@ use crate::{car::Car, error, road::Road, Traffic};
 use web_sys::CanvasRenderingContext2d;
 
 type AgentId = usize;
+type Index = usize;
 
 #[derive(Debug)]
 enum Focus {
@@ -11,7 +12,7 @@ enum Focus {
     BestAgent,
     /// Follow set agent no matter the score
     /// Wrapped value is index of agent's position in `agents`
-    SpecificAgent(usize),
+    SpecificAgent(AgentId, usize),
 }
 
 impl Default for Focus {
@@ -23,7 +24,7 @@ impl Default for Focus {
 #[derive(Debug)]
 pub struct Agents {
     /// Best agent should be most desired, so we will cache its index
-    best_agent_index: usize,
+    best_agent: (AgentId, Index),
     /// All of our agents we will operate on
     agents: Vec<Car>,
     /// Map that tracks scores of each agent
@@ -36,7 +37,7 @@ pub struct Agents {
 impl Agents {
     pub fn new(cars: Vec<Car>) -> Self {
         Agents {
-            best_agent_index: 0,
+            best_agent: (0, 0),
             scores: HashMap::new(),
             agents: cars,
             focused_agent: Focus::default(),
@@ -45,22 +46,25 @@ impl Agents {
 
     /// Returns reference to agent with highest score
     pub fn best_agent(&self) -> Option<&Car> {
-        self.agents.get(self.best_agent_index)
+        self.agents.get(self.best_agent.1)
     }
 
     /// Returns reference to agent focused agent
     pub fn focused_agent(&self) -> Option<&Car> {
         match self.focused_agent {
             Focus::BestAgent => self.best_agent(),
-            Focus::SpecificAgent(index) => self.agents.get(index),
+            Focus::SpecificAgent(_, index) => self.agents.get(index),
         }
     }
 
     /// update all our agent related data such as score, position, etc.
     pub fn update(&mut self, road: &Road, traffic: &Traffic) {
         let mut tmp_score = 0.0;
-        let mut tmp_index = 0_usize;
+        let mut best_agent = self.best_agent;
         for (i, car) in self.agents.iter_mut().enumerate() {
+            if car.damaged {
+                continue;
+            }
             car.update(road, traffic);
 
             // we start at y position of Y
@@ -69,14 +73,14 @@ impl Agents {
             let score = car.y.neg();
             if score > tmp_score {
                 tmp_score = score;
-                tmp_index = i;
+                best_agent = (car.id, i);
             }
 
             let v = self.scores.entry(car.id).or_insert(0.);
             *v = score;
         }
 
-        self.best_agent_index = tmp_index;
+        self.best_agent = best_agent;
     }
 
     /// Draw all our agents on provided canvas
@@ -100,8 +104,8 @@ impl Agents {
     /// helper to get index of the focused agent
     fn focus_agent_index(&self) -> usize {
         match self.focused_agent {
-            Focus::BestAgent => self.best_agent_index,
-            Focus::SpecificAgent(index) => index,
+            Focus::BestAgent => self.best_agent.1,
+            Focus::SpecificAgent(_, index) => index,
         }
     }
 
@@ -113,7 +117,7 @@ impl Agents {
         let index = self.agents.iter().position(|c| c.id == agent_id);
 
         match index {
-            Some(index) => self.focused_agent = Focus::SpecificAgent(index),
+            Some(index) => self.focused_agent = Focus::SpecificAgent(agent_id, index),
             None => error!("Invalid agent id '{agent_id}'"),
         }
     }
@@ -124,11 +128,13 @@ impl Agents {
     pub fn focus_next(&mut self) {
         match self.focused_agent {
             Focus::BestAgent => {
-                self.focused_agent =
-                    Focus::SpecificAgent((self.best_agent_index + 1) % self.agents.len());
+                self.focused_agent = Focus::SpecificAgent(
+                    self.best_agent.0,
+                    (self.best_agent.1 + 1) % self.agents.len(),
+                );
             }
-            Focus::SpecificAgent(index) => {
-                self.focused_agent = Focus::SpecificAgent((index + 1) % self.agents.len());
+            Focus::SpecificAgent(id, index) => {
+                self.focused_agent = Focus::SpecificAgent(id, (index + 1) % self.agents.len());
             }
         }
     }
@@ -139,12 +145,13 @@ impl Agents {
         match self.focused_agent {
             Focus::BestAgent => {
                 self.focused_agent = Focus::SpecificAgent(
-                    (self.best_agent_index - 1).clamp(0, self.agents.len() - 1),
+                    self.best_agent.0,
+                    (self.best_agent.1 - 1).clamp(0, self.agents.len() - 1),
                 );
             }
-            Focus::SpecificAgent(index) => {
+            Focus::SpecificAgent(id, index) => {
                 self.focused_agent =
-                    Focus::SpecificAgent((index - 1).clamp(0, self.agents.len() - 1))
+                    Focus::SpecificAgent(id, (index - 1).clamp(0, self.agents.len() - 1))
             }
         }
     }
@@ -199,6 +206,19 @@ impl Agents {
 
     pub fn clean(&mut self) {
         let y = self.best_agent().map(|a| a.y.abs()).unwrap_or_default();
-        self.agents.retain(|c| c.y.abs() > y.abs() - 500.)
+        self.agents.retain(|c| c.y.abs() > y.abs() - 500.);
+        // after cleaning vector, indexes will change and so our custom focused index might point to different car
+        // so we need to update it
+        self.refocus();
+    }
+
+    /// This should be called after every vector clean up because if
+    /// agents get removed, others get reindexed and as such
+    /// we need to update our cached indexes used to focusing
+    pub fn refocus(&mut self) {
+        match self.focused_agent {
+            Focus::BestAgent => (), // we do not need to do anything as we resolve best agent in update()
+            Focus::SpecificAgent(agent_id, _) => self.focus_agent(agent_id),
+        }
     }
 }

@@ -124,8 +124,11 @@ pub fn feed_forward(
 
         *output = match biases.get(i) {
             Some(b) if sum + *b > 0. => 1.,
-            Some(b) if sum < *b => 0.,
-            _ => 0.,
+            Some(b) if sum + *b <= 0. => 0.,
+            _ => {
+                crate::error!("did NOT find bias for neuron");
+                0.
+            }
         }
     }
 }

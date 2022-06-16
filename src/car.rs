@@ -94,7 +94,6 @@ impl Car {
         if self.damaged {
             return;
         }
-
         self.move_car();
 
         self.create_polygon();
