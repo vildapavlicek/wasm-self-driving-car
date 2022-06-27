@@ -91,9 +91,6 @@ impl Car {
     }
 
     pub fn update(&mut self, road: &Road, traffic: &Traffic) {
-        if self.damaged {
-            return;
-        }
         self.move_car();
 
         self.create_polygon();

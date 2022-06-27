@@ -12,7 +12,7 @@ enum Focus {
     BestAgent,
     /// Follow set agent no matter the score
     /// Wrapped value is index of agent's position in `agents`
-    SpecificAgent(AgentId, usize),
+    SpecificAgent(AgentId, Index),
 }
 
 impl Default for Focus {
