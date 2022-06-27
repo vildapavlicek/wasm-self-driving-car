@@ -39,7 +39,6 @@ impl Visualizer {
             draw_level(
                 &ctx,
                 network.0.get(i).expect("expected level, got nothing"),
-                // LEFT,
                 level_top,
                 width,
                 level_height,
@@ -55,7 +54,6 @@ impl Visualizer {
 fn draw_level(
     ctx: &CanvasRenderingContext2d,
     level: &Level,
-    //left: u32,
     top: f64,
     width: u32,
     height: f64,

@@ -385,7 +385,7 @@ impl Simulation {
             .y
             .abs();
 
-        y = y + DISTANCE;
+        y = y + 150.;
 
         for _ in 0..3 {
             y = y + CAR_HEIGHT_DEFAULT + 10.;
@@ -604,16 +604,13 @@ impl Simulation {
         }
 
         if let Some(a) = self.agents.best_agent() {
-            self.traffic.clean(a.y)
+            self.traffic.clean(a.y);
         };
-
-        self.agents.clean();
 
         // update traffic
         self.traffic.update();
+        self.agents.clean();
         self.agents.update(&self.road, &self.traffic);
-
-        // remove cars that are too far behing the agent
     }
 
     fn draw(

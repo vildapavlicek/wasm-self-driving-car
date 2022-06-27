@@ -37,9 +37,6 @@ discard_btn.addEventListener("click", discard);
 const runBtn = document.getElementById("runBtn");
 runBtn.addEventListener("click", run);
 
-/* const verticalSpawnBtn = document.getElementById("verticalSpawnBtn");
-verticalSpawnBtn.addEventListener("click", spawnVerticalCars); */
-
 const horizontalSpawnBtn = document.getElementById("horizontalSpawnBtn");
 horizontalSpawnBtn.addEventListener("click", spawnHorizontalCars);
 
@@ -65,7 +62,6 @@ hardTestBtn.addEventListener("click", hardTest);
 const trainingTrafficBtn = document.getElementById("trainingTrafficBtn");
 trainingTrafficBtn.addEventListener("click", trainingTraffic);
 
-trainingTrafficBtn;
 
 let simulation;
 let config = Simulation.initConfig(window);
@@ -155,15 +151,6 @@ function run() {
   return;
 }
 
-/* function spawnVerticalCars() {
-  let lane_ids = document
-    .getElementById("verticalSpawnerLaneIdInput")
-    .value.split(",")
-    .map((item) => parseInt(item, 10));
-  console.log("lane id parsed", lane_ids);
-  simulation.spawnCarsVertically(lane_ids);
-}
- */
 function spawnHorizontalCars() {
   let lane_ids = document
     .getElementById("horizontalSpawnerLaneIdInput")
