@@ -1,60 +1,21 @@
 [package]
 name = "wasm-self-driving-car"
 version = "0.1.0"
-authors = ["Vilém Pavlíček <pavlicek@cngroup.dk>"]
+authors = ["Vilém Pavlíček <vildapavlicek@gmail.com>"]
 edition = "2018"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-
-#[features]
-#default = ["console_error_panic_hook"]
-
 [dependencies]
-wasm-bindgen = { version = "0.2.63", features = ["serde-serialize"]}
-js-sys = "0.3.57"
-#web-sys = { version = "0.3.57", features = ["window", "CanvasRenderingContext2d", "HtmlCanvasElement", "Document", "Element"] }
-console_error_panic_hook = { version = "0.1.6" }
-itertools = "0.10.3"
+ai = { path = "./lib" }
+# UI
+yew = "0.19"
+# data serialization
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
+# web related
+web-sys = { version = "0.3.58", features = ['CanvasRenderingContext2d',  'Document',  'Element',  'HtmlCanvasElement',  'HtmlElement',  'Window',  'console',  'Storage']}
 
-
-# The `console_error_panic_hook` crate provides better debugging of panics by
-# logging them with `console.error`. This is great for development, but requires
-# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
-# code size when deploying.
-#console_error_panic_hook = { version = "0.1.6", optional = true }
-
-
-# `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
-# compared to the default allocator's ~10K. It is slower than the default
-# allocator, however.
-#
-# Unfortunately, `wee_alloc` requires nightly Rust when targeting wasm for now.
-wee_alloc = { version = "0.4.5", optional = true }
-
-[dependencies.web-sys]
-version = "0.3.57"
-features = [
-  'CanvasRenderingContext2d',
-  'CssStyleDeclaration',
-  'Document',
-  'Element',
-  'EventTarget',
-  'HtmlCanvasElement',
-  'HtmlElement',
-  'MouseEvent',
-  'Node',
-  'Window',
-  'console',
-  'Storage'
-]
-
-
-[dev-dependencies]
-wasm-bindgen-test = "0.3.13"
-
-[profile.release]
-# Tell `rustc` to optimize for small code size.
-opt-level = "s"
+# logging and panic errors
+console_error_panic_hook = "0.1.7"
+tracing = "0.1.35"
+tracing-wasm = "0.2.1"
+tap = "1.0.1"
