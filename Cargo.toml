@@ -3,9 +3,13 @@ name = "wasm-self-driving-car"
 version = "0.1.0"
 authors = ["Vilém Pavlíček <vildapavlicek@gmail.com>"]
 edition = "2018"
+rust-version = "1.61.0"
+description = "Self-Driving car simulation based on freeCodeCamp's tutorial but in Rust + WASM"
 
 [dependencies]
-ai = { path = "./lib" }
+simulation = { path = "./lib" }
+gloo-render = "0.1.1"
+
 # UI
 yew = "0.19"
 # data serialization
@@ -19,4 +23,7 @@ console_error_panic_hook = "0.1.7"
 tracing = "0.1.35"
 tracing-wasm = "0.2.1"
 tap = "1.0.1"
-gloo-storage = "0.2.1"
+
+
+
+wasm-bindgen = "0.2.63"

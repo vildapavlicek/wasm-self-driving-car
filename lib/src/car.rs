@@ -36,7 +36,6 @@ pub struct Car {
     pub damaged: bool,
 }
 
-#[wasm_bindgen]
 impl Car {
     pub fn no_control(x: f64, y: f64, max_speed: f64) -> Self {
         Car::new(
@@ -191,10 +190,10 @@ impl Car {
             crate::CAR_HEIGHT_DEFAULT,
             Sensor::new(
                 config.rays_count as i32,
-                config.rays_lenght,
+                config.rays_length,
                 std::f64::consts::PI / config.rays_spread,
             ),
-            config.neurons_count().deref(),
+            &config.neurons_counts(),
             brain,
         )
     }

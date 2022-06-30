@@ -1,5 +1,5 @@
 [package]
-name = "ai"
+name = "simulation"
 version = "0.1.0"
 authors = ["Vilém Pavlíček <vildapavlicek@gmail.com>"]
 edition = "2018"
@@ -18,6 +18,10 @@ console_error_panic_hook = { version = "0.1.6" }
 itertools = "0.10.3"
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
+tracing = "0.1.35"
+gloo-storage = "0.2.1"
+gloo-render = "0.1.1"
+tap = "1.0.1"
 
 
 # The `console_error_panic_hook` crate provides better debugging of panics by

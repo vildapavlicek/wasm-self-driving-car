@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ops::Neg};
 
-use crate::{car::Car, error, road::Road, Traffic};
+use crate::{car::Car, road::Road, Traffic};
 use web_sys::CanvasRenderingContext2d;
 
 type AgentId = usize;
@@ -118,7 +118,7 @@ impl Agents {
 
         match index {
             Some(index) => self.focused_agent = Focus::SpecificAgent(agent_id, index),
-            None => error!("Invalid agent id '{agent_id}'"),
+            None => tracing::error!(%agent_id, "Invalid agent id"),
         }
     }
 

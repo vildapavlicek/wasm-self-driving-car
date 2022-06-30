@@ -1,15 +1,16 @@
 pub mod agents;
 
+use gloo_storage::{LocalStorage, Storage};
 use itertools::Itertools;
 use js_sys::Math::random;
 use std::cell::RefCell;
-use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::utils::lerp;
 
-#[wasm_bindgen]
+const LOCAL_STORAGE_BRAIN_KEY: &str = "wasm-self-driving-car.brain.save";
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct NeuralNetwork(#[wasm_bindgen(skip)] pub Vec<Level>);
+pub struct NeuralNetwork(pub Vec<Level>);
 
 impl NeuralNetwork {
     pub fn new(neuron_counts: &[usize]) -> Self {
@@ -42,15 +43,14 @@ impl NeuralNetwork {
     }
 }
 
-#[wasm_bindgen]
 impl NeuralNetwork {
-    pub fn serialize_brain(&self) -> String {
+    /* pub fn serialize_brain(&self) -> String {
         serde_json::to_string(&self).expect("failed to serialize brain")
     }
 
     pub fn deserialize_brain(json: String) -> Option<NeuralNetwork> {
         serde_json::from_str::<NeuralNetwork>(&json).ok()
-    }
+    } */
 
     pub fn mutate(&self, mutation_rate: f64) -> Self {
         let mut levels = self.0.clone();
@@ -67,6 +67,20 @@ impl NeuralNetwork {
             }
         }
         Self(levels)
+    }
+
+    pub fn load_brain() -> Option<Self> {
+        LocalStorage::get(LOCAL_STORAGE_BRAIN_KEY).ok()
+    }
+
+    pub fn save_brain(&self) {
+        if let Err(err) = LocalStorage::set(LOCAL_STORAGE_BRAIN_KEY, self) {
+            tracing::error!(%err, "failed to store brain to local storage")
+        };
+    }
+
+    pub fn discard_saved_brain() {
+        LocalStorage::delete(LOCAL_STORAGE_BRAIN_KEY)
     }
 }
 
@@ -126,7 +140,7 @@ pub fn feed_forward(
             Some(b) if sum + *b > 0. => 1.,
             Some(b) if sum + *b <= 0. => 0.,
             _ => {
-                crate::error!("did NOT find bias for neuron");
+                //crate::error!("did NOT find bias for neuron");
                 0.
             }
         }

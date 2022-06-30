@@ -27,7 +27,7 @@ impl Traffic {
         ) as i32);
         let speed = js_sys::Math::random() * 3.;
 
-        crate::log!("adding car at lane {} with speed {}", at_lane, speed);
+        tracing::trace!(%at_lane, %speed, "adding car");
 
         let car = Car::no_control(at_lane, y - 500., speed);
 

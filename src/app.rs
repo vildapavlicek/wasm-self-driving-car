@@ -1,130 +1,12 @@
-use std::ops::Deref;
-use tap::tap::Tap;
-use web_sys::HtmlInputElement;
-use yew::events::{Event, InputEvent};
+use web_sys::{HtmlCanvasElement, HtmlInputElement, Window};
+use yew::events::InputEvent;
 use yew::prelude::*;
 
-const LOCAL_STORAGE_BRAIN_KEY: &str = "wasm-self-driving-car.brain.save";
-const LOCAL_STORAGE_CONFIG_KEY: &str = "wasm-self-driving-car.config.save";
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
-pub struct Config {
-    pub lanes_count: usize,
-    pub lane_index: usize,
-    pub cars_count: usize,
-    pub rays_count: usize,
-    pub rays_length: f64,
-    pub rays_spread: f64,
-    pub hidden_layers: Vec<usize>,
-    pub mutation_rate: f64,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            lanes_count: 3,
-            lane_index: 1,
-            cars_count: 100,
-            rays_count: 5,
-            rays_length: 120.,
-            rays_spread: 2.,
-            hidden_layers: vec![6],
-            mutation_rate: 0.2,
-        }
-    }
-}
-
-impl Config {
-    fn set_lanes_count(&mut self, value: &str) {
-        match value.parse::<usize>() {
-            Ok(v) => self.lanes_count = v,
-            Err(err) => tracing::error!(field = "lanes_count", %err, "failed to update config"),
-        }
-    }
-
-    fn set_lane_index(&mut self, value: &str) {
-        match value.parse::<usize>() {
-            Ok(v) => self.lane_index = v,
-            Err(err) => tracing::error!(field = "lane_index", %err, "failed to update config"),
-        }
-    }
-
-    fn set_cars_count(&mut self, value: &str) {
-        match value.parse::<usize>() {
-            Ok(v) => self.cars_count = v,
-            Err(err) => tracing::error!(field = "cars_count", %err, "failed to update config"),
-        }
-    }
-
-    fn set_rays_count(&mut self, value: &str) {
-        match value.parse::<usize>() {
-            Ok(v) => self.rays_count = v,
-            Err(err) => tracing::error!(field = "rays_count", %err, "failed to update config"),
-        }
-    }
-
-    fn set_rays_length(&mut self, value: &str) {
-        match value.parse::<f64>() {
-            Ok(v) => self.rays_length = v,
-            Err(err) => tracing::error!(field = "rays_length", %err, "failed to update config"),
-        }
-    }
-
-    fn set_rays_spread(&mut self, value: &str) {
-        match value.parse::<f64>() {
-            Ok(v) => self.rays_spread = v,
-            Err(err) => tracing::error!(field = "rays_spread", %err, "failed to update config"),
-        }
-    }
-
-    fn set_hidden_layers(&mut self, value: &str) {
-        let hidden_layers = value
-            .split(',')
-            .filter_map(|v| v.parse::<usize>().ok())
-            .collect::<Vec<usize>>();
-        if hidden_layers.is_empty() {
-            tracing::error!("failed to parse hidden layers");
-            return;
-        }
-
-        self.hidden_layers = hidden_layers;
-    }
-
-    fn set_mutation_rate(&mut self, value: &str) {
-        match value.parse::<f64>() {
-            Ok(v) => self.mutation_rate = v,
-            Err(err) => tracing::error!(field = "mutation_rate", %err, "failed to update config"),
-        }
-    }
-
-    fn load() -> Self {
-        use gloo_storage::Storage;
-
-        gloo_storage::LocalStorage::get(LOCAL_STORAGE_CONFIG_KEY)
-            .tap(|config| tracing::info!(?config, "local storage config"))
-            .unwrap_or_default()
-    }
-
-    fn save(&self) {
-        use gloo_storage::Storage;
-
-        if let Err(err) = gloo_storage::LocalStorage::set(LOCAL_STORAGE_CONFIG_KEY, self) {
-            tracing::error!(config = ?self, %err, "failed to save config to local storage");
-        }
-    }
-
-    fn hidden_layers(&self) -> String {
-        use std::io::Write;
-        let mut buffer = Vec::with_capacity(self.hidden_layers.capacity());
-        self.hidden_layers.iter().for_each(|n| {
-            write!(&mut buffer, "{},", n).ok();
-        });
-        buffer.pop();
-
-        String::from_utf8(buffer).expect("failed to write hidden layers as string")
-    }
-}
-
+use crate::helpers::*;
+use simulation::{Config, Simulation, SimulationState};
+use tracing::{debug, error, info, trace};
+use wasm_bindgen::JsCast;
+use web_sys::CanvasRenderingContext2d;
 pub enum AppMessage {
     UpdateLanesCount(String),
     UpdateLaneIndex(String),
@@ -137,6 +19,7 @@ pub enum AppMessage {
     RunSimulation,
     StartPauseSimulation,
     StopSimulation,
+    SimulationStep,
     NextAgent,
     PreviousAgent,
     SaveBrain,
@@ -145,6 +28,66 @@ pub enum AppMessage {
 
 pub struct App {
     config: Config,
+    simulation: Simulation,
+    animation_handler: Option<gloo_render::AnimationFrame>,
+    window: Window,
+    car_canvas: Option<HtmlCanvasElement>,
+    network_canvas: Option<HtmlCanvasElement>,
+}
+
+impl App {
+    fn init_canvases(&mut self) {
+        let inner_height = self.window.inner_height().unwrap().as_f64().unwrap() as u32;
+        let inner_width = self.window.inner_width().unwrap().as_f64().unwrap();
+
+        let car_canvas = self
+            .window
+            .document()
+            .unwrap()
+            .get_element_by_id("carCanvas")
+            .unwrap()
+            .dyn_into::<web_sys::HtmlCanvasElement>()
+            .unwrap();
+
+        car_canvas.set_height(inner_height);
+        car_canvas.set_width(200);
+
+        self.car_canvas = Some(car_canvas);
+
+        let network_canvas = web_sys::window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .get_element_by_id("networkCanvas")
+            .unwrap()
+            .dyn_into::<web_sys::HtmlCanvasElement>()
+            .unwrap();
+
+        network_canvas.set_height(inner_height);
+        network_canvas.set_width((inner_width * 0.4) as u32);
+    }
+
+    fn get_car_ctx(&self) -> CanvasRenderingContext2d {
+        self.car_canvas
+            .as_ref()
+            .unwrap()
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+            .unwrap()
+    }
+
+    /* fn get_network_ctx(&self) -> CanvasRenderingContext2d {
+        self.network_canvas
+            .as_ref()
+            .unwrap()
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+            .unwrap()
+    } */
 }
 
 impl Component for App {
@@ -152,30 +95,83 @@ impl Component for App {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
+        let config = Config::load();
+        let window = web_sys::window().expect("failed to get window");
         App {
-            config: Config::load(),
+            simulation: Simulation::init(&config),
+            config,
+            animation_handler: None,
+            car_canvas: None,
+            network_canvas: None,
+            window,
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            AppMessage::UpdateLanesCount(v) => self.config.set_lanes_count(&v),
-            AppMessage::UpdateLaneIndex(v) => self.config.set_lane_index(&v),
-            AppMessage::UpdateCarsCount(v) => self.config.set_cars_count(&v),
-            AppMessage::UpdateRaysCount(v) => self.config.set_rays_count(&v),
-            AppMessage::UpdateRaysLength(v) => self.config.set_rays_length(&v),
-            AppMessage::UpdateRaysSpread(v) => self.config.set_rays_spread(&v),
-            AppMessage::UpdateHiddenLayers(v) => self.config.set_hidden_layers(&v),
-            AppMessage::UpdateMutationRate(v) => self.config.set_mutation_rate(&v),
-            AppMessage::RunSimulation => todo!("implement run simulation"),
-            AppMessage::StartPauseSimulation => todo!("implement pause/run simulation"),
-            AppMessage::StopSimulation => todo!("not yet implemented, StopSimulation"),
+            AppMessage::UpdateLanesCount(v) => {
+                parse::<usize>(v).map(|v| self.config.set_lanes_count(v));
+            }
+            AppMessage::UpdateLaneIndex(v) => {
+                parse::<usize>(v).map(|v| self.config.set_lane_index(v));
+            }
+            AppMessage::UpdateCarsCount(v) => {
+                parse::<usize>(v).map(|v| self.config.set_cars_count(v));
+            }
+            AppMessage::UpdateRaysCount(v) => {
+                parse::<usize>(v).map(|v| self.config.set_rays_count(v));
+            }
+            AppMessage::UpdateRaysLength(v) => {
+                parse::<f64>(v).map(|v| self.config.set_rays_length(v));
+            }
+            AppMessage::UpdateRaysSpread(v) => {
+                parse::<f64>(v).map(|v| self.config.set_rays_spread(v));
+            }
+            AppMessage::UpdateHiddenLayers(v) => self.config.parse_and_set_hidden_layers(&v),
+            AppMessage::UpdateMutationRate(v) => {
+                parse::<f64>(v).map(|v| self.config.set_mutation_rate(v));
+            }
+            AppMessage::RunSimulation => {
+                tracing::trace!("received request to run simulation");
+                let l = ctx.link().clone();
+                self.simulation = Simulation::init(&self.config);
+                self.simulation.run();
+                let animation_handler = gloo_render::request_animation_frame(move |_v| {
+                    l.send_message(AppMessage::SimulationStep)
+                });
+
+                tracing::trace!(?animation_handler, "got animation handler");
+
+                self.animation_handler = Some(animation_handler);
+            }
+            AppMessage::StartPauseSimulation => match self.simulation.state {
+                SimulationState::Paused => self.simulation.run(),
+                SimulationState::Running => self.simulation.pause(),
+                _ => (),
+            },
+            AppMessage::StopSimulation => {
+                let handler = self.animation_handler.take();
+                drop(handler)
+            }
+            AppMessage::SimulationStep => {
+                let (_, network_ctx) = get_cvs_ctx(self);
+                tracing::trace!("requested simulation step");
+                let l = ctx.link().clone();
+                self.simulation
+                    .step(&self.get_car_ctx(), &network_ctx, 700.);
+
+                let animation_handler = gloo_render::request_animation_frame(move |_v| {
+                    l.send_message(AppMessage::SimulationStep)
+                });
+
+                self.animation_handler = Some(animation_handler);
+            }
             AppMessage::NextAgent => todo!("not yet implemented, NextAgent"),
             AppMessage::PreviousAgent => todo!("not yet implemented, PreviousAgent"),
             AppMessage::SaveBrain => todo!("not yet implemented, SaveBrain"),
             AppMessage::DiscardSavedBrain => todo!("not yet implemented, DiscardSavedBrain"),
         }
-        false
+        true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
@@ -337,7 +333,8 @@ impl Component for App {
                         </button>
 
                         <button
-                            id="runBtn">
+                            id="runBtn"
+                            onclick = { ctx.link().callback(|_| AppMessage::RunSimulation) }>
                                 {"Run"}
                         </button>
                         <button
@@ -349,7 +346,7 @@ impl Component for App {
                 </div>
 
                 <div id="middleSection">
-                    <canvas id="carCanvas" />
+                    <canvas id="carCanvas"/>
                     <div id="verticalButtons">
                         <span class="emojiHeader" id="topBorder"> {"🧬"}</span>
                         <button
@@ -392,4 +389,57 @@ impl Component for App {
             </>
         }
     }
+}
+
+fn get_cvs_ctx(app: &mut App) -> (CanvasRenderingContext2d, CanvasRenderingContext2d) {
+    let window = web_sys::window().expect("no fcking window found");
+    let inner_height = window.inner_height().unwrap().as_f64().unwrap() as u32;
+
+    let car_canvas = window
+        .document()
+        .unwrap()
+        .get_element_by_id("carCanvas")
+        .unwrap()
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .unwrap();
+
+    car_canvas.set_height(inner_height);
+    car_canvas.set_width(200);
+
+    if app.car_canvas.is_none() {
+        tracing::trace!("adding new canvas to app");
+        app.car_canvas = Some(car_canvas);
+    }
+
+    let car_cvs_ctx = web_sys::window()
+        .unwrap()
+        .document()
+        .unwrap()
+        .get_element_by_id("carCanvas")
+        .unwrap()
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap()
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    let network_cvs_ctx = web_sys::window()
+        .unwrap()
+        .document()
+        .unwrap()
+        .get_element_by_id("networkCanvas")
+        .unwrap()
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap()
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    (car_cvs_ctx, network_cvs_ctx)
 }
