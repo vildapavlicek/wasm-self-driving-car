@@ -171,7 +171,7 @@ impl Component for App {
             AppMessage::SaveBrain => todo!("not yet implemented, SaveBrain"),
             AppMessage::DiscardSavedBrain => todo!("not yet implemented, DiscardSavedBrain"),
         }
-        true
+        false
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
