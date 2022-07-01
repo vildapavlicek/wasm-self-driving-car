@@ -18,6 +18,8 @@ use visualizer::Visualizer;
 use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::CanvasRenderingContext2d;
 
+pub use wasm_bindgen_rayon::init_thread_pool;
+
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]

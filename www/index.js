@@ -4,6 +4,7 @@ import {
   Simulation,
   Config,
   SimulationState,
+//  initThreadPool
 } from "wasm-self-driving-car";
 
 import { getConfigFromForm, initForm } from "./formHandler";
@@ -61,6 +62,8 @@ hardTestBtn.addEventListener("click", hardTest);
 
 const trainingTrafficBtn = document.getElementById("trainingTrafficBtn");
 trainingTrafficBtn.addEventListener("click", trainingTraffic);
+
+// initThreadPool(2).then(() => console.log("thread's initialized")).catch(() => console.error("failed to initialize threads"));
 
 
 let simulation;
