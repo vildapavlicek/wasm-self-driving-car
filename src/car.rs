@@ -28,7 +28,7 @@ pub struct Car {
     height: f64,
     speed: f64,
     max_speed: f64,
-    angle: f64, // = 0;
+    angle: f64,
     controls: Controls,
     sensor: Option<Sensor>,
     brain: Option<NeuralNetwork>,

@@ -22,7 +22,8 @@ impl NeuralNetwork {
     }
 
     pub fn feed_forward_2(&self, inputs: Vec<f64>) {
-        let first_level = self.0.first().expect("neural network missing input layer");
+        // SAFETY: each network is create with atleast input layer
+        let first_level = unsafe { self.0.get_unchecked(0) };
 
         feed_forward(
             &RefCell::new(inputs),
@@ -122,13 +123,7 @@ pub fn feed_forward(
             sum += input * weights[j][i]
         }
 
-        *output = match biases.get(i) {
-            Some(b) if sum + *b > 0. => 1.,
-            Some(b) if sum + *b <= 0. => 0.,
-            _ => {
-                crate::error!("did NOT find bias for neuron");
-                0.
-            }
-        }
+        // SAFETY: we can't get out of bounds as the index is based on iterator
+        *output = ((sum + unsafe { biases.get_unchecked(i) } > 0.) as u8) as f64;
     }
 }
