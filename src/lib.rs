@@ -282,9 +282,10 @@ impl Simulation {
         car_ctx: CanvasRenderingContext2d,
         network_ctx: CanvasRenderingContext2d,
         car_rendering_distance: f64,
+        draw_network: bool,
     ) {
         self.update();
-        self.draw(&car_ctx, &network_ctx, car_rendering_distance);
+        self.draw(&car_ctx, &network_ctx, car_rendering_distance, draw_network);
     }
 
     #[wasm_bindgen(js_name = updateConfig)]
@@ -618,6 +619,7 @@ impl Simulation {
         car_ctx: &CanvasRenderingContext2d,
         network_ctx: &CanvasRenderingContext2d,
         car_rendering_distance: f64,
+        draw_network: bool,
     ) {
         if matches!(self.state, SimulationState::Stopped) {
             return;
@@ -631,14 +633,16 @@ impl Simulation {
             }
         };
 
-        // draw best cars neural network
-        network_ctx.set_line_dash_offset(focused_agent.y / 5.);
-        Visualizer::draw_network(
-            &network_ctx,
-            focused_agent
-                .brain()
-                .expect("best agent doesn't have brain"),
-        );
+        if draw_network {
+            // draw best cars neural network
+            network_ctx.set_line_dash_offset(focused_agent.y / 5.);
+            Visualizer::draw_network(
+                &network_ctx,
+                focused_agent
+                    .brain()
+                    .expect("best agent doesn't have brain"),
+            );
+        }
 
         // save context
         car_ctx.save();

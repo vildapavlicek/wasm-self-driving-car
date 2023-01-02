@@ -1,4 +1,5 @@
 use crate::ai::*;
+use std::f64::consts::PI;
 use wasm_bindgen::prelude::*;
 use web_sys::CanvasRenderingContext2d;
 
@@ -77,12 +78,12 @@ fn draw_level(
     for (i, input) in level.inputs.iter().enumerate() {
         let x = get_node(level.inputs.len(), i, right);
         ctx.begin_path();
-        ctx.arc(x, bottom, NODE_RADIUS, 0., 2. * std::f64::consts::PI)
+        ctx.arc(x, bottom, NODE_RADIUS, 0., 2. * PI)
             .expect("failed to `arc`");
         ctx.set_fill_style(&JsValue::from_str("black"));
         ctx.fill();
         ctx.begin_path();
-        ctx.arc(x, bottom, NODE_RADIUS * 0.6, 0., 2. * std::f64::consts::PI)
+        ctx.arc(x, bottom, NODE_RADIUS * 0.6, 0., 2. * PI)
             .expect("failed to `arc`");
         ctx.set_fill_style(&crate::utils::get_rgba(*input));
         ctx.fill();
@@ -91,19 +92,19 @@ fn draw_level(
     for (i, output) in level.outputs.borrow().iter().enumerate() {
         let x = get_node(level.outputs.borrow().len(), i, right);
         ctx.begin_path();
-        ctx.arc(x, top, NODE_RADIUS, 0., 2. * std::f64::consts::PI)
+        ctx.arc(x, top, NODE_RADIUS, 0., 2. * PI)
             .expect("failed to `arc`");
         ctx.set_fill_style(&JsValue::from_str("black"));
         ctx.fill();
         ctx.begin_path();
-        ctx.arc(x, top, NODE_RADIUS * 0.6, 0., 2. * std::f64::consts::PI)
+        ctx.arc(x, top, NODE_RADIUS * 0.6, 0., 2. * PI)
             .expect("failed to `arc`");
         ctx.set_fill_style(&crate::utils::get_rgba(*output));
         ctx.fill();
 
         ctx.begin_path();
         ctx.set_line_width(2.);
-        ctx.arc(x, top, NODE_RADIUS * 0.8, 0., 2. * std::f64::consts::PI)
+        ctx.arc(x, top, NODE_RADIUS * 0.8, 0., 2. * PI)
             .expect("failed to `arc`");
         ctx.set_stroke_style(&crate::utils::get_rgba(*level.biases.get(i).unwrap()));
 
@@ -123,7 +124,7 @@ fn draw_level(
             ctx.set_text_baseline("middle");
             ctx.set_fill_style(&JsValue::from("black"));
             ctx.set_stroke_style(&JsValue::from("white"));
-            ctx.set_font(format!("{}px Arial", NODE_RADIUS * 1.5).as_str());
+            ctx.set_font("27px Arial");
             ctx.fill_text(icons[i], x as f64, top + NODE_RADIUS * 0.1)
                 .expect("failed to `fill_text`");
             ctx.set_line_width(0.5);

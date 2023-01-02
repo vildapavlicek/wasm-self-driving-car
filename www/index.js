@@ -25,9 +25,6 @@ networkCanvas.width = window.innerWidth * 0.4;
 const startPauseBtn = document.getElementById("startPause");
 startPauseBtn.addEventListener("click", startPause);
 
-const stopBtn = document.getElementById("stop");
-stopBtn.addEventListener("click", stop);
-
 const save_btn = document.getElementById("save");
 save_btn.addEventListener("click", save);
 
@@ -62,6 +59,9 @@ hardTestBtn.addEventListener("click", hardTest);
 const trainingTrafficBtn = document.getElementById("trainingTrafficBtn");
 trainingTrafficBtn.addEventListener("click", trainingTraffic);
 
+const drawNetworkChckBox = document.getElementById("drawNetworkChckBox");
+
+
 
 let simulation;
 let config = Simulation.initConfig(window);
@@ -88,7 +88,7 @@ function animate() {
   networkCanvas.height = window.innerHeight;
   networkCanvas.width = window.innerWidth * 0.4;
 
-  simulation.step(carCtx, networkCtx, carCanvas.height);
+  simulation.step(carCtx, networkCtx, carCanvas.height, drawNetworkChckBox.checked);
 
   updateTable(document, simulation.top10Agents());
 

@@ -97,17 +97,11 @@ pub fn poly_intersection_with_poly(poly1: &[(f64, f64)], poly2: &[(f64, f64)]) -
 
 pub fn get_rgba(value: f64) -> JsValue {
     let alpha = value.abs();
-    let r = match value.is_sign_negative() {
-        true => 0,
-        _ => 255,
-    };
+    let r = !value.is_sign_negative() as u8 * 255;
 
-    let g = r;
+    //let g = r;
 
-    let b = match value.is_sign_positive() {
-        true => 0,
-        _ => 255,
-    };
+    let b = !value.is_sign_positive() as u8 * 255;
 
-    JsValue::from(format!("rgba({r}, {g}, {b}, {alpha})"))
+    JsValue::from(format!("rgba({r}, 255, {b}, {alpha})"))
 }
