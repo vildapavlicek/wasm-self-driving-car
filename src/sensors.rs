@@ -12,14 +12,13 @@ use web_sys::CanvasRenderingContext2d;
 pub struct Ray {
     start: (f64, f64),
     end: (f64, f64),
-    lenght: f64,
+    length: f64,
 }
 
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Sensor {
     ray_count: i32,
-    ray_length: f64,
     ray_spread: f64,
     rays: Vec<Ray>,
     readings: Vec<Option<IntersectionPoint>>,
@@ -33,13 +32,12 @@ impl Sensor {
             rays.push(Ray {
                 start: (0., 0.),
                 end: (0., 0.),
-                lenght: ray_length,
+                length: ray_length, // todo! add suppport so each ray can have different length
             });
         }
 
         Sensor {
             ray_count,
-            ray_length,
             ray_spread,
             rays,
             readings: vec![None; ray_count as usize],
@@ -62,8 +60,8 @@ impl Sensor {
 
             let start = (x, y);
             let end = (
-                x - ray_angle.sin() * self.ray_length,
-                y - ray_angle.cos() * self.ray_length,
+                x - ray_angle.sin() * ray.length,
+                y - ray_angle.cos() * ray.length,
             );
 
             ray.start = start;
@@ -85,7 +83,7 @@ impl Sensor {
             .iter()
             .zip(self.readings.iter_mut())
             .for_each(|(ray, reading)| {
-                *reading = get_reading(y, ray, road_borders, traffic, ray.lenght)
+                *reading = get_reading(y, ray, road_borders, traffic, ray.length)
             });
     }
 

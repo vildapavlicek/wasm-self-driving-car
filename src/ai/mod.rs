@@ -1,6 +1,5 @@
 pub mod agents;
 
-use itertools::Itertools;
 use js_sys::Math::random;
 use std::cell::RefCell;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -14,8 +13,8 @@ pub struct NeuralNetwork(#[wasm_bindgen(skip)] pub Vec<Level>);
 impl NeuralNetwork {
     pub fn new(neuron_counts: &[usize]) -> Self {
         let mut levels = Vec::with_capacity(neuron_counts.len() - 1);
-        for (input_count, output_count) in neuron_counts.iter().tuple_windows() {
-            levels.push(Level::new(*input_count, *output_count));
+        for (input_count_index, output_count) in neuron_counts.iter().skip(1).enumerate() {
+            levels.push(Level::new(neuron_counts[input_count_index], *output_count));
         }
 
         Self(levels)

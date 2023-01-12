@@ -6,7 +6,12 @@ import {
   SimulationState,
 } from "wasm-self-driving-car";
 
-import { getConfigFromForm, initForm } from "./formHandler";
+import {
+  freezeConfig,
+  unfreezeConfig,
+  getConfigFromForm,
+  initForm,
+} from "./formHandler";
 
 let animationFrameId;
 
@@ -61,14 +66,18 @@ trainingTrafficBtn.addEventListener("click", trainingTraffic);
 
 const drawNetworkChckBox = document.getElementById("drawNetworkChckBox");
 
-
-
 let simulation;
 let config = Simulation.initConfig(window);
 
 initForm(document, config);
+
+if (window.localStorage.getItem("bestBrain") != null) {
+  console.log("found stored brain, freezing config");
+  freezeConfig(document);
+}
 generateTable(document);
 
+///
 const tbody = document.getElementById("rankingsTable");
 tbody.addEventListener("click", function (e) {
   const cell = e.target.closest("td");
@@ -88,7 +97,12 @@ function animate() {
   networkCanvas.height = window.innerHeight;
   networkCanvas.width = window.innerWidth * 0.4;
 
-  simulation.step(carCtx, networkCtx, carCanvas.height, drawNetworkChckBox.checked);
+  simulation.step(
+    carCtx,
+    networkCtx,
+    carCanvas.height,
+    drawNetworkChckBox.checked
+  );
 
   updateTable(document, simulation.top10Agents());
 
@@ -97,12 +111,14 @@ function animate() {
 
 function save() {
   console.log("saving brain");
+  freezeConfig(document);
   simulation.saveFocusedCar(window);
-  alert("brain saved");
+  console.log("brain saved");
 }
 
 function discard() {
   console.log("discarding brain");
+  unfreezeConfig(document);
   Simulation.discard_brain(window);
 }
 

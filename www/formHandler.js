@@ -45,3 +45,20 @@ export function getConfigFromForm(document) {
     parseFloat(document.getElementById("mutationRateInput").value)
   );
 }
+
+
+export function freezeConfig(document) {
+  document.getElementById("raysCountInput").disabled = true
+  document.getElementById("raysLengthInput").disabled = true
+  document.getElementById("raysLengthInput").disabled = true
+  document.getElementById("raysSpread").disabled = true
+  document.getElementById("hiddenLayersInput").disabled = true
+}
+
+export function unfreezeConfig(document) {
+  document.getElementById("raysCountInput").disabled = false
+  document.getElementById("raysLengthInput").disabled = false
+  document.getElementById("raysLengthInput").disabled = false
+  document.getElementById("raysSpread").disabled = false
+  document.getElementById("hiddenLayersInput").disabled = false
+}

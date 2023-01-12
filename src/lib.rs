@@ -171,8 +171,8 @@ impl Simulation {
             config.lanes_count as i32,
         );
 
-        let brain = match window.local_storage() {
-            Ok(Some(storage)) => match storage.get_item("bestBrain").ok().flatten() {
+        let brain = match window.local_storage().ok().flatten() {
+            Some(storage) => match storage.get_item("bestBrain").ok().flatten() {
                 Some(raw_save) => {
                     log!("found stored brain");
                     Some(
