@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Self-driving car. WASM + RUST</title>
+    <link rel="stylesheet" href = "style.css">
+  </head>
+  <body>
+    <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+    <div id="leftSection">
+      <div id = "rankings">
+        <h1 class = "title">Rankings</h1>
+      </div>
+      <form id="settingsForm">
+        <label class="settingsFormLabel">lanes count</label>
+        <br>
+        <input id="lanesCountInput", type="text", class="settingsFormInput"></input>
+        <br>
+        <label class="settingsFormLabel">lane index</label>
+        <br>
+        <input id="laneIndexInput", type="text", class="settingsFormInput"></input>
+        <br>
+        <label class="settingsFormLabel">cars count</label>
+        <br>
+        <input id="carsCountInput", type="text", class="settingsFormInput"></input>
+        <br>
+        <label class="settingsFormLabel">rays count</label>
+        <br>
+        <input id="raysCountInput", type="text", class="settingsFormInput"></input>
+        <br>
+        <label class="settingsFormLabel">rays length</label>
+        <br>
+        <input id="raysLengthInput", type="text", class="settingsFormInput"></input>
+        <br>
+        <label class="settingsFormLabel">rays spread</label>
+        <br>
+        <input id="raysSpread", type="text", class="settingsFormInput"></input>
+        <br>
+        <label class="settingsFormLabel">hidden layers</label>
+        <br>
+        <input id="hiddenLayersInput", type="text", class="settingsFormInput"></input>
+        <br>
+        <label class="settingsFormLabel">mutation rate</label>
+        <br>
+        <input id="mutationRateInput", type="text", class="settingsFormInput"></input>
+      </form>
+      <div id = "menu">
+        <form id = "horizontalSpawner">
+          <label class="settingsFormLabel">lane ids</label>
+          <input id="horizontalSpawnerLaneIdInput", type="text", class="settingsFormInput"></input>
+        </form>
+        <button id="horizontalSpawnBtn">Spawn Horizontal</button>
+
+        <button id="trainingTrafficBtn">Training Traffic</button>
+        <button id="easyTestBtn">Easy Test</button>
+        <button id="mediumTestBtn">Medium Test</button>
+        <button id="hardTestBtn">Hard Test</button>
+        
+        <button id="runBtn">Run</button>
+        <button id="resetFocusBtn">Reset Focus</button>
+      </div>
+    </div>
+    <div id="middleSection">
+      <canvas id="carCanvas"></canvas>
+      <div id="verticalButtons">
+        <span class="emojiHeader", id="topBorder">🧬</span>
+        <button id="startPause">⏯️</button>
+        <input type="checkbox" id="drawNetworkChckBox" name="drawNetworkCheckbox" checked />
+        <span class="emojiHeader", id="topBottomBorder">🧠</span>
+        <button id="nextAgentBtn">➡️</button>
+        <button id="previousAgentBtn">⬅️</button>
+        <button id="save">💾</button>
+        <button id="discard">🗑️</button>
+      </div>
+    </div>
+    <div id="rightSection">
+      <canvas id="networkCanvas"></canvas>
+    </div>
+    <script src="bootstrap.js"></script>
+  </body>
+</html>

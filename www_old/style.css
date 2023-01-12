@@ -1,0 +1,143 @@
+body {
+    margin: 0;
+    background: #3D315B;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#leftSection {
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40%;
+}
+
+#middleSection {
+    margin: 0px 10px 0px 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#rightSection {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40%;
+}
+
+#verticalButtons {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    background-color: #D4C5E2;
+    padding: 3px;
+    border-radius: 10px;
+}
+
+#verticalButtons button  {
+    border: none;
+    border-radius: 5px;
+    padding: 5px, 5px, 7px, 5px;
+    margin: 2px;
+    cursor: pointer;
+    font-size: 37px;
+    padding-bottom: 7px;
+    background-color: #D4C5E2;
+}
+
+#carCanvas {
+    background: lightgray;
+}
+
+#networkCanvas {
+    background: #3D315B;
+}
+
+#settingsForm {
+    text-align: center;
+    align-items: center;
+    margin: 25px;
+    background-color: #D4C5E2;
+    padding: 10px 30px 20px 30px;
+    border-radius: 20px;
+}
+
+.settingsFormLabel {
+    font-weight: bold;
+    font-size: larger;
+    align-items: center;
+}
+
+.settingsFormInput {
+    border-radius: 9px;
+}
+
+.emojiHeader {
+    font-size: 37px;
+    align-self: center;
+    padding-bottom: 10px;
+}
+
+#topBottomBorder.emojiHeader {
+    border-bottom: black dashed 3px;
+    border-top: black solid 5px;
+}
+
+#topBorder.emojiHeader {
+    border-bottom: black dashed 3px;
+}
+
+#rankings {
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 20%;
+    height: inherit;
+}
+
+#rankingsTable {
+    font-size: 22px;
+}
+
+#rankings table tr:nth-child(1) {
+    font-size: 37px;
+    color: gold;
+}
+
+#rankings table tr:nth-child(2) {
+    font-size: 37px;
+    color: silver;
+}
+
+#rankings table tr:nth-child(3) {
+    font-size: 37px;
+    color: orange;
+}
+
+#menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #D4C5E2;
+    border-radius: 10px;
+    padding: 10px 10px 10px 10px;
+}
+
+#menu button {
+    width: 80%;
+}
+
+#spawner {
+    text-align: center;
+}
+
+#spawnBtn {
+    margin-top: 2px;
+}
