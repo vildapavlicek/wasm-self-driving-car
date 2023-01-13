@@ -38,6 +38,11 @@ macro_rules! error {
     }
 }
 
+#[wasm_bindgen]
+pub fn test() {
+    log!("hello from wasm");
+}
+
 pub const CAR_Y_DEFAULT: f64 = 100.;
 pub const CAR_WIDHT_DEFAULT: f64 = 30.;
 pub const CAR_HEIGHT_DEFAULT: f64 = 50.;
